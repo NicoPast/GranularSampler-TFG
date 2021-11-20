@@ -53,6 +53,24 @@ public:
     void getStateInformation (juce::MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
 
+    //==============================================================================
+    //==============================================================================
+
+    //==============================================================================
+    //================================== My new code ===============================
+    //==============================================================================
+
+    //==============================================================================
+    // ================================= Parameters ================================
+    static juce::AudioProcessorValueTreeState::ParameterLayout
+        createParameterLayout();
+
+    // coordinate GUI with real params
+    juce::AudioProcessorValueTreeState apvts { *this,
+        nullptr, "Parameters", createParameterLayout() };
+
+    // =============================================================================
+
 private:
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleEQAudioProcessor)
