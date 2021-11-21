@@ -75,6 +75,7 @@ void updateCutFilter(ChainType& chain, const CoefficientType& coefficients, cons
     }
     default:
         // ERROR -> Incorrect type of Slope given
+        DBG("ERROR: Slope type given not supported");
         break;
     }
 }

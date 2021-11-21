@@ -186,6 +186,8 @@ void SimpleEQAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer, juc
 
     leftChain.process(leftContext);
     rightChain.process(rightContext);
+
+    // ======================================================
 }
 
 //==============================================================================
@@ -259,7 +261,7 @@ void SimpleEQAudioProcessor::updatePeakFilter(const ChainSettings& chainSettings
     updateCoefficients(rightChain.get<ChainPositions::Peak>().coefficients, peakCoefficients);
 }
 
-void updateCoefficients(Coefficients& old, const Coefficients& replacements) 
+void updateCoefficients(Coefficients& old, const Coefficients& replacements)
 {
     *old = *replacements; 
 }
