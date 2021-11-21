@@ -265,8 +265,6 @@ void SimpleEQAudioProcessor::updatePeakFilter(const ChainSettings& chainSettings
         chainSettings.peakQuality,
         juce::Decibels::decibelsToGain(chainSettings.peakGainInDecibels));
 
-    //*leftChain.get<ChainPositions::Peak>().coefficients = *peakCoefficients;
-    //*rightChain.get<ChainPositions::Peak>().coefficients = *peakCoefficients;
     updateCoefficients(leftChain.get<ChainPositions::Peak>().coefficients, peakCoefficients);
     updateCoefficients(rightChain.get<ChainPositions::Peak>().coefficients, peakCoefficients);
 }

@@ -107,48 +107,41 @@ private:
     using Coefficients = Filter::CoefficientsPtr;
     static void updateCoefficients(Coefficients& old, const Coefficients& replacements);
 
-    template<typename ChainType, typename CoefficientType>
-    void updateCutFilter(ChainType& chainLowCut, const CoefficientType& cutCoefficients, const Slope& lowCutSlope) 
+    template<int Index, typename ChainType, typename CoefficientType>
+    void update(ChainType& chain, const CoefficientType& coefficients) 
     {
-        chainLowCut.template setBypassed<0>(true);
-        chainLowCut.template setBypassed<1>(true);
-        chainLowCut.template setBypassed<2>(true);
-        chainLowCut.template setBypassed<3>(true);
+        updateCoefficients(chain.template get<Index>().coefficients, coefficients[Index]);
+        chain.template setBypassed<Index>(false);
+    }
 
-        switch (lowCutSlope) {
-        case Slope_12: {
-            *chainLowCut.template get<0>().coefficients = *cutCoefficients[0];
-            chainLowCut.template setBypassed<0>(false);
-            break;
+    template<typename ChainType, typename CoefficientType>
+    void updateCutFilter(ChainType& chain, const CoefficientType& coefficients, const Slope& slope) 
+    {
+        chain.template setBypassed<0>(true);
+        chain.template setBypassed<1>(true);
+        chain.template setBypassed<2>(true);
+        chain.template setBypassed<3>(true);
+
+        switch (slope) {
+        case Slope_48:
+        {
+            update<3>(chain, coefficients);
         }
-        case Slope_24: {
-            *chainLowCut.template get<0>().coefficients = *cutCoefficients[0];
-            chainLowCut.template setBypassed<0>(false);
-            *chainLowCut.template get<1>().coefficients = *cutCoefficients[1];
-            chainLowCut.template setBypassed<1>(false);
-            break;
+        case Slope_36:
+        {
+            update<2>(chain, coefficients);
         }
-        case Slope_36: {
-            *chainLowCut.template get<0>().coefficients = *cutCoefficients[0];
-            chainLowCut.template setBypassed<0>(false);
-            *chainLowCut.template get<1>().coefficients = *cutCoefficients[1];
-            chainLowCut.template setBypassed<1>(false);
-            *chainLowCut.template get<2>().coefficients = *cutCoefficients[2];
-            chainLowCut.template setBypassed<2>(false);
-            break;
+        case Slope_24:
+        {
+            update<1>(chain, coefficients);
         }
-        case Slope_48: {
-            *chainLowCut.template get<0>().coefficients = *cutCoefficients[0];
-            chainLowCut.template setBypassed<0>(false);
-            *chainLowCut.template get<1>().coefficients = *cutCoefficients[1];
-            chainLowCut.template setBypassed<1>(false);
-            *chainLowCut.template get<2>().coefficients = *cutCoefficients[2];
-            chainLowCut.template setBypassed<2>(false);
-            *chainLowCut.template get<3>().coefficients = *cutCoefficients[3];
-            chainLowCut.template setBypassed<3>(false);
+        case Slope_12:
+        {
+            update<0>(chain, coefficients);
             break;
         }
         default:
+            // ERROR -> Incorrect type of Slope given
             break;
         }
     }
