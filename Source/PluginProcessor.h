@@ -21,6 +21,7 @@ public:
     ~SimpleEQAudioProcessor() override;
 
     //==============================================================================
+    // main 1 = start();
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
 
@@ -28,6 +29,7 @@ public:
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
    #endif
 
+    // main 2 = update();
     void processBlock (juce::AudioBuffer<float>&, juce::MidiBuffer&) override;
 
     //==============================================================================
@@ -54,13 +56,12 @@ public:
     void setStateInformation (const void* data, int sizeInBytes) override;
 
     //==============================================================================
-    //==============================================================================
 
     //==============================================================================
     //================================== My new code ===============================
     //==============================================================================
 
-    //==============================================================================
+
     // ================================= Parameters ================================
     static juce::AudioProcessorValueTreeState::ParameterLayout
         createParameterLayout();
@@ -72,6 +73,14 @@ public:
     // =============================================================================
 
 private:
+    using Filter = juce::dsp::IIR::Filter<float>;
+
+    using CutFilter = juce::dsp::ProcessorChain<Filter, Filter, Filter, Filter>;
+
+    using MonoChain = juce::dsp::ProcessorChain<CutFilter, Filter, CutFilter>;
+
+    MonoChain leftChain, rightChain;
+
     //==============================================================================
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleEQAudioProcessor)
 };
