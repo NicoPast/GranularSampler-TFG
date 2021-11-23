@@ -348,6 +348,43 @@ void ResponseCurveComponent::resized()
     }
 
     //g.drawRect(getAnalysisArea());
+
+    g.setColour(Colours::lightgrey);
+    const int fontHeight = 10;
+    g.setFont(fontHeight);
+
+    for (int i = 0; i < freqs.size(); i++)
+    {
+        // to draw only the labels i want
+        if ((i-1) % 5 < 2 && i != 0)
+            continue;
+
+        DBG(i);
+
+        auto f = freqs[i];
+        auto x = xs[i];
+
+        bool addK = false;
+        String str;
+        if (f > 999.f) {
+            addK = true;
+            f /= 1000.f;
+        }
+
+        str << f;
+        if (addK)
+            str << "k";
+        str << "Hz";
+
+        auto textWidth = g.getCurrentFont().getStringWidth(str);
+
+        Rectangle<int> r;
+        r.setSize(textWidth, fontHeight);
+        r.setCentre(x, 0);
+        r.setY(1);
+
+        g.drawFittedText(str, r, juce::Justification::centred, 1);
+    }
 }
 
 juce::Rectangle<int> ResponseCurveComponent::getRenderArea()
