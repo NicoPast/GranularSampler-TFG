@@ -62,6 +62,16 @@ void LookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y,
     }
 }
 
+void LookAndFeel::drawToggleButton(juce::Graphics& g, juce::ToggleButton toggleButton, bool sholdDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)
+{
+    using namespace juce;
+
+    Path powerButton;
+
+    auto bounds = toggleButton.getLocalBounds();
+    auto size = jmin(bounds.getWidth(), bounds.getHeight() - 6);
+}
+
 //==============================================================================
 void RotarySliderWithLabels::paint(juce::Graphics& g) 
 {
@@ -589,12 +599,18 @@ SimpleEQAudioProcessorEditor::SimpleEQAudioProcessorEditor (SimpleEQAudioProcess
         addAndMakeVisible(comp);
     }
 
+    peakBypassedButton.setLookAndFeel(&lnf);
+    lowCutBypassedButton.setLookAndFeel(&lnf);
+    highCutBypassedButton.setLookAndFeel(&lnf);
+
     setSize (600, 480);
 }
 
 SimpleEQAudioProcessorEditor::~SimpleEQAudioProcessorEditor()
 {
-
+    peakBypassedButton.setLookAndFeel(nullptr);
+    lowCutBypassedButton.setLookAndFeel(nullptr);
+    highCutBypassedButton.setLookAndFeel(nullptr);
 }
 
 //==============================================================================
