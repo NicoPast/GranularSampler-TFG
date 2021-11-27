@@ -121,7 +121,7 @@ struct AnalyzerPathGenerator
             y = map(renderData[binNum]);
 
             // its full of nans
-            //jassert(!std::isnan(y) && !std::isinf(y));
+            jassert(!std::isnan(y) && !std::isinf(y));
             
             if(!std::isnan(y) && !std::isinf(y))
             {
@@ -194,6 +194,52 @@ private:
     juce::String suffix;
 };
 
+struct PathProducer
+{
+public:
+    PathProducer(SingleChannelSampleFifo<SimpleEQAudioProcessor::BlockType>& scsf) :
+        channelFifo(&scsf)
+    {
+        /*
+        48000 / 2048 ~= 23Hz
+        this implies, more resolution in the high frequencies than the lower,
+        its how it works
+        */
+
+        channelFFTDataGenerator.changeOrder(FFTOrder::order2048);
+        monoBuffer.setSize(1, channelFFTDataGenerator.getFFTSize());
+    }
+    void process(juce::Rectangle<float> fftBounds, double sampleRate);
+    juce::Path getPath() { return channelFFTPath; }
+private:
+    // Host Buffers X Samples
+    //  |
+    //  v
+    // SCSF -> single channel sample fifo
+    //  |
+    //  | Fixed size Blocks
+    //  v
+    // FFT Data Generator
+    //  |
+    //  | FFT Data Blocks
+    //  v
+    // Path Producer
+    //  |
+    //  | juce::Path
+    //  v
+    // GUI
+
+    SingleChannelSampleFifo<SimpleEQAudioProcessor::BlockType>* channelFifo;
+
+    juce::AudioBuffer<float> monoBuffer;
+
+    FFTDataGenerator<std::vector<float>> channelFFTDataGenerator;
+
+    AnalyzerPathGenerator<juce::Path> pathProducer;
+
+    juce::Path channelFFTPath;
+};
+
 struct ResponseCurveComponent : juce::Component,
     juce::AudioProcessorParameter::Listener,
     juce::Timer
@@ -226,32 +272,7 @@ private:
 
     // ================================= Analyzer ================================
 
-    // Host Buffers X Samples
-    //  |
-    //  v
-    // SCSF -> single channel sample fifo
-    //  |
-    //  | Fixed size Blocks
-    //  v
-    // FFT Data Generator
-    //  |
-    //  | FFT Data Blocks
-    //  v
-    // Path Producer
-    //  |
-    //  | juce::Path
-    //  v
-    // GUI
-
-    SingleChannelSampleFifo<SimpleEQAudioProcessor::BlockType>* leftChannelFifo;
-
-    juce::AudioBuffer<float> monoBuffer;
-
-    FFTDataGenerator<std::vector<float>> leftChannelFFTDataGenerator;
-
-    AnalyzerPathGenerator<juce::Path> pathProducer;
-
-    juce::Path leftChannelFFTPath;
+    PathProducer leftPathProducer, rightPathProducer;
 };
 
 //==============================================================================
@@ -293,6 +314,15 @@ private:
         highCutFreqSliderAttachment,
         lowCutSlopeSliderAttachment,
         highCutSlopeSliderAttachment;
+
+    juce::ToggleButton lowCutBypassedButton, peakBypassedButton, highCutBypassedButton, analyzerEnabledButton;
+
+    using ButtonAttachment = APVTS::ButtonAttachment;
+
+    ButtonAttachment lowCutBypassedButtonAttachment, 
+        peakBypassedButtonAttachment, 
+        highCutBypassedButtonAttachment, 
+        analyzerEnabledButtonAttachment;
 
     ResponseCurveComponent responseCurveComponent;
 
