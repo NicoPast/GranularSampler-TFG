@@ -62,30 +62,40 @@ void LookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y,
     }
 }
 
-void LookAndFeel::drawToggleButton(juce::Graphics& g, juce::ToggleButton toggleButton, bool sholdDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)
+void LookAndFeel::drawToggleButton(juce::Graphics& g, juce::ToggleButton& toggleButton, bool sholdDrawButtonAsHighlighted, bool shouldDrawButtonAsDown)
 {
     using namespace juce;
 
     Path powerButton;
-
     auto bounds = toggleButton.getLocalBounds();
-    auto size = jmin(bounds.getWidth(), bounds.getHeight()) - 6;
-    auto r = bounds.withSizeKeepingCentre(size, size);
+    //g.setColour(Colours::red);
+    //g.drawRect(bounds);
+    auto size = jmin(bounds.getWidth(), bounds.getHeight()) - 6; // -JUCE_LIVE_CONSTANT(6);
+    auto r = bounds.withSizeKeepingCentre(size, size).toFloat();
 
-    float ang = 30.f;
+    float ang = 30.f; // JUCE_LIVE_CONSTANT(30.f);
 
-    ang -= 6;
+    size -= 6.f; //JUCE_LIVE_CONSTANT(6.f);
 
     powerButton.addCentredArc(r.getCentreX(),
         r.getCentreY(),
-        size * 0.5, 
-        size * 0.5,
+        size * 0.5f, 
+        size * 0.5f,
         0.f,
-        radiansToDegrees(ang), 
-        degreesToRadians(3.60f - ang)´,
+        degreesToRadians(ang), 
+        degreesToRadians(360.f - ang),
         true);
 
+    powerButton.startNewSubPath(r.getCentreX(), r.getY());
+    powerButton.lineTo(r.getCentre());
 
+    PathStrokeType pst (2.f, PathStrokeType::JointStyle::curved);
+
+    auto color = toggleButton.getToggleState() ? Colours::dimgrey : Colour(0u, 172u, 1u);
+
+    g.setColour(color);
+    g.strokePath(powerButton, pst);
+    g.drawEllipse(r, 2);
 }
 
 //==============================================================================
