@@ -36,11 +36,27 @@ struct FFTDataGenerator
         window->multiplyWithWindowingTable(fftData.data(), fftSize);        // [1]
 
         // then render our FFT data...
-        forwardFFT->performFrequencyOnlyForwardTransform(fftData.data());   // [2
+        forwardFFT->performFrequencyOnlyForwardTransform(fftData.data());   // [2]
 
         int numBins = (int)fftSize / 2;
 
-        // normalize them to fft values.
+        //normalize the fft values.
+        for (int i = 0; i < numBins; ++i)
+        {
+            auto v = fftData[i];
+            //fftData[i] /= (float) numBins;
+            if (!std::isinf(v) && !std::isnan(v))
+            {
+                v /= float(numBins);
+            }
+            else
+            {
+                v = 0.f;
+            }
+            fftData[i] = v;
+        }
+
+        //convert them to decibels
         for (int i = 0; i < numBins; ++i)
         {
             fftData[i] = juce::Decibels::gainToDecibels(fftData[i], negativeInfinity);
@@ -110,7 +126,9 @@ struct AnalyzerPathGenerator
 
         auto y = map(renderData[0]);
 
-        jassert(!std::isnan(y) && !std::isinf(y));
+        //jassert(!std::isnan(y) && !std::isinf(y));
+        if (std::isnan(y) || std::isinf(y))
+            y = bottom;
 
         p.startNewSubPath(0, y);
 
@@ -121,7 +139,7 @@ struct AnalyzerPathGenerator
             y = map(renderData[binNum]);
 
             // its full of nans
-            jassert(!std::isnan(y) && !std::isinf(y));
+            //jassert(!std::isnan(y) && !std::isinf(y));
             
             if(!std::isnan(y) && !std::isinf(y))
             {
@@ -261,6 +279,12 @@ struct ResponseCurveComponent : juce::Component,
     void paint(juce::Graphics& g) override;
 
     void resized() override;
+
+    void toggleAnalysisEnablement(bool enabled)
+    {
+        shouldShowFFTAnalysis = enabled;
+    }
+
 private:
     SimpleEQAudioProcessor& audioProcessor;
     juce::Atomic<bool> parametsChanged{ false };
@@ -278,6 +302,8 @@ private:
     // ================================= Analyzer ================================
 
     PathProducer leftPathProducer, rightPathProducer;
+
+    bool shouldShowFFTAnalysis = true;
 };
 
 //==============================================================================
