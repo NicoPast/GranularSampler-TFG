@@ -16,6 +16,7 @@
 #include "EQEditor.h"
 
 //==============================================================================
+
 /**
 */
 class GranularSamplerAudioProcessorEditor  : public juce::AudioProcessorEditor
@@ -39,10 +40,36 @@ private:
 
     //==============================================================================
 
+    juce::TextButton openFileButton, playButton;
+
+    void openButtonClicked()
+    {
+        auto chooser = std::make_unique<juce::FileChooser>("Select a Wave file to play...",
+            juce::File{},
+            "*.wav");                     // [7]
+        auto chooserFlags = juce::FileBrowserComponent::openMode
+            | juce::FileBrowserComponent::canSelectFiles;
+
+        chooser->launchAsync(chooserFlags, [this](const juce::FileChooser& fc)           // [8]
+            {
+                auto file = fc.getResult();
+
+                if (file != juce::File{})                                                      // [9]
+                {
+                    if (audioProcessor.createReaderFor(file))
+                    {
+                        playButton.setEnabled(true);                                                      // [13]
+                    }
+                }
+            });
+    }
+
+    //==============================================================================
+
 #pragma region EQComponents
     void eqResized(juce::Rectangle<int> bounds);
 
-    void eqSetUp();
+    void eqSetUp(juce::Component::SafePointer<GranularSamplerAudioProcessorEditor> safePtr);
 
     bool eqActive = true;
 
@@ -84,10 +111,6 @@ private:
     
     //EQEditor eq;
 #pragma endregion EQComponents
-
-    //==============================================================================
-
-    juce::TextButton openFile;
 
     //==============================================================================
 

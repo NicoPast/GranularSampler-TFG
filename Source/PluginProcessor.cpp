@@ -96,6 +96,8 @@ void GranularSamplerAudioProcessor::prepareToPlay (double sampleRate, int sample
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
 
+    formatManager.registerBasicFormats();
+
     juce::dsp::ProcessSpec spec;
     
     spec.maximumBlockSize = samplesPerBlock;

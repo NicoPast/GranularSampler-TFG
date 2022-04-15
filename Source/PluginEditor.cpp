@@ -64,16 +64,29 @@ GranularSamplerAudioProcessorEditor::GranularSamplerAudioProcessorEditor (Granul
         addAndMakeVisible(comp);
     }
 
-    openFile.setLookAndFeel(&lnf);
+    openFileButton.setLookAndFeel(&lnf);
+    playButton.setLookAndFeel(&lnf);
 
-    eqSetUp();
+    auto safePtr = juce::Component::SafePointer<GranularSamplerAudioProcessorEditor>(this);
+
+    openFileButton.onClick = [safePtr]()
+    {
+        if (auto* comp = safePtr.getComponent())
+        {
+            DBG("hello");
+            comp->openButtonClicked();
+        }
+    };
+
+    eqSetUp(safePtr);
 
     setSize (1200, 480);
 }
 
 GranularSamplerAudioProcessorEditor::~GranularSamplerAudioProcessorEditor()
 {
-    openFile.setLookAndFeel(nullptr);
+    openFileButton.setLookAndFeel(nullptr);
+    playButton.setLookAndFeel(nullptr);
 
     eqEnabledButton.setLookAndFeel(nullptr);
     peakBypassedButton.setLookAndFeel(nullptr);
@@ -94,13 +107,6 @@ void GranularSamplerAudioProcessorEditor::paint (juce::Graphics& g)
     //g.drawFittedText ("Hello World!", getLocalBounds(), juce::Justification::centred, 1);
     
     g.fillAll (juce::Colours::black);
-
-    auto bounds = getLocalBounds();
-
-    auto boundsEQ = bounds.removeFromRight(bounds.getWidth() / 2.f);
-
-    g.setColour(juce::Colours::red);
-    g.drawRect(bounds);
 }
 
 void GranularSamplerAudioProcessorEditor::resized()
@@ -112,12 +118,20 @@ void GranularSamplerAudioProcessorEditor::resized()
 
     auto boundsEQ = bounds.removeFromRight(bounds.getWidth() / 2.f);
 
+    eqResized(boundsEQ);
+
+    auto buttonsArea = bounds.removeFromTop(bounds.getHeight() / 8.f);
+
+    auto playButtonArea = buttonsArea.removeFromRight(buttonsArea.getWidth() / 2.f);
+
+
     //eq.resized(boundsEQ);
 
-    openFile.setBounds(bounds);
-    openFile.setButtonText("Click to OpenFile");
+    openFileButton.setButtonText("Click to OpenFile");
+    openFileButton.setBounds(buttonsArea);
 
-    eqResized(boundsEQ);
+    playButton.setButtonText("Click to Play");
+    playButton.setBounds(playButtonArea);
 }
 
 void GranularSamplerAudioProcessorEditor::eqResized(juce::Rectangle<int> bounds)
@@ -160,7 +174,7 @@ void GranularSamplerAudioProcessorEditor::eqResized(juce::Rectangle<int> bounds)
     peakQualitySlider.setBounds(bounds);
 }
 
-void GranularSamplerAudioProcessorEditor::eqSetUp()
+void GranularSamplerAudioProcessorEditor::eqSetUp(juce::Component::SafePointer<GranularSamplerAudioProcessorEditor> safePtr)
 {
     //auto test = eq.getButtons();
 
@@ -173,7 +187,6 @@ void GranularSamplerAudioProcessorEditor::eqSetUp()
     highCutBypassedButton.setLookAndFeel(&lnf);
     analyzerEnabledButton.setLookAndFeel(&lnf);
 
-    auto safePtr = juce::Component::SafePointer<GranularSamplerAudioProcessorEditor>(this);
     eqEnabledButton.onClick = [safePtr]()
     {
         if (auto* comp = safePtr.getComponent())
@@ -252,7 +265,8 @@ std::vector<juce::Component*> GranularSamplerAudioProcessorEditor::getComps()
 {
     return 
     {
-        &openFile,
+        &openFileButton,
+        &playButton,
 
         &peakFreqSlider,
         &peakGainSlider,
