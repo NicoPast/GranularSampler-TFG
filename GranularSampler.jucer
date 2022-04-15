@@ -1,53 +1,53 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="Nfb6ks" name="GranularSampler" projectType="audioplug" useAppConfig="0"
+<JUCERPROJECT id="Bfp3YK" name="GranularSampler" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1"
               cppLanguageStandard="17">
-  <MAINGROUP id="D2O5nT" name="GranularSampler">
-    <GROUP id="{6CA7C27A-61AD-2E05-4C42-0DD24941DFD8}" name="Source">
-      <FILE id="F44psD" name="CommonEditor.cpp" compile="1" resource="0"
+  <MAINGROUP id="fMZ5yW" name="GranularSampler">
+    <GROUP id="{FEF5CF10-46EA-3883-9C19-C447546C5235}" name="Source">
+      <FILE id="ea6xKM" name="Analyzer.cpp" compile="1" resource="0" file="Source/Analyzer.cpp"/>
+      <FILE id="eDHWcF" name="Analyzer.h" compile="0" resource="0" file="Source/Analyzer.h"/>
+      <FILE id="f48sQf" name="CommonEditor.cpp" compile="1" resource="0"
             file="Source/CommonEditor.cpp"/>
-      <FILE id="EKZ7Jl" name="CommonEditor.h" compile="0" resource="0" file="Source/CommonEditor.h"/>
-      <FILE id="geyADG" name="CommonProcessor.cpp" compile="1" resource="0"
+      <FILE id="xx30sK" name="CommonEditor.h" compile="0" resource="0" file="Source/CommonEditor.h"/>
+      <FILE id="koIOUc" name="CommonProcessor.cpp" compile="1" resource="0"
             file="Source/CommonProcessor.cpp"/>
-      <FILE id="nxNwUW" name="CommonProcessor.h" compile="0" resource="0"
+      <FILE id="PP0TFZ" name="CommonProcessor.h" compile="0" resource="0"
             file="Source/CommonProcessor.h"/>
-      <FILE id="CWYqQA" name="Analyzer.cpp" compile="1" resource="0" file="Source/Analyzer.cpp"/>
-      <FILE id="eYfYtF" name="Analyzer.h" compile="0" resource="0" file="Source/Analyzer.h"/>
-      <FILE id="aGOug3" name="EQEditor.cpp" compile="1" resource="0" file="Source/EQEditor.cpp"/>
-      <FILE id="d2U7NI" name="EQEditor.h" compile="0" resource="0" file="Source/EQEditor.h"/>
-      <FILE id="uHmhMq" name="EQProcessor.cpp" compile="1" resource="0" file="Source/EQProcessor.cpp"/>
-      <FILE id="TVSfLL" name="EQProcessor.h" compile="0" resource="0" file="Source/EQProcessor.h"/>
-      <FILE id="CG0Uke" name="PluginProcessor.cpp" compile="1" resource="0"
+      <FILE id="ntooag" name="EQEditor.cpp" compile="1" resource="0" file="Source/EQEditor.cpp"/>
+      <FILE id="lgPaPw" name="EQEditor.h" compile="0" resource="0" file="Source/EQEditor.h"/>
+      <FILE id="l9BZMl" name="EQProcessor.cpp" compile="1" resource="0" file="Source/EQProcessor.cpp"/>
+      <FILE id="dno1Pq" name="EQProcessor.h" compile="0" resource="0" file="Source/EQProcessor.h"/>
+      <FILE id="ILAEbc" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
-      <FILE id="nKxuZE" name="PluginProcessor.h" compile="0" resource="0"
+      <FILE id="esRLyc" name="PluginProcessor.h" compile="0" resource="0"
             file="Source/PluginProcessor.h"/>
-      <FILE id="tB6cMV" name="PluginEditor.cpp" compile="1" resource="0"
+      <FILE id="vRxiNG" name="PluginEditor.cpp" compile="1" resource="0"
             file="Source/PluginEditor.cpp"/>
-      <FILE id="gOL0qa" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
+      <FILE id="GmtgQi" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
     </GROUP>
   </MAINGROUP>
   <JUCEOPTIONS JUCE_STRICT_REFCOUNTEDPOINTER="1" JUCE_VST3_CAN_REPLACE_VST2="0"/>
   <EXPORTFORMATS>
     <VS2019 targetFolder="Builds/VisualStudio2019">
       <CONFIGURATIONS>
-        <CONFIGURATION isDebug="1" name="Debug" targetName="SimpleEQ"/>
-        <CONFIGURATION isDebug="0" name="Release" targetName="SimpleEQ"/>
+        <CONFIGURATION isDebug="1" name="Debug" targetName="GranularSampler"/>
+        <CONFIGURATION isDebug="0" name="Release" targetName="GranularSampler"/>
       </CONFIGURATIONS>
       <MODULEPATHS>
-        <MODULEPATH id="juce_audio_basics" path="../JUCE/modules"/>
-        <MODULEPATH id="juce_audio_devices" path="../JUCE/modules"/>
-        <MODULEPATH id="juce_audio_formats" path="../JUCE/modules"/>
-        <MODULEPATH id="juce_audio_plugin_client" path="../JUCE/modules"/>
-        <MODULEPATH id="juce_audio_processors" path="../JUCE/modules"/>
-        <MODULEPATH id="juce_audio_utils" path="../JUCE/modules"/>
-        <MODULEPATH id="juce_core" path="../JUCE/modules"/>
-        <MODULEPATH id="juce_data_structures" path="../JUCE/modules"/>
-        <MODULEPATH id="juce_events" path="../JUCE/modules"/>
-        <MODULEPATH id="juce_graphics" path="../JUCE/modules"/>
-        <MODULEPATH id="juce_gui_basics" path="../JUCE/modules"/>
-        <MODULEPATH id="juce_gui_extra" path="../JUCE/modules"/>
-        <MODULEPATH id="juce_dsp" path="../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_basics" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_devices" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_formats" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_plugin_client" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_processors" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_audio_utils" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_core" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_data_structures" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_events" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_graphics" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_basics" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_gui_extra" path="../../JUCE/modules"/>
+        <MODULEPATH id="juce_dsp" path="../../JUCE/modules"/>
       </MODULEPATHS>
     </VS2019>
   </EXPORTFORMATS>

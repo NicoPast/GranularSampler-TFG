@@ -22,6 +22,7 @@ GranularSamplerAudioProcessor::GranularSamplerAudioProcessor()
                        )
 #endif
 {
+    formatManager.registerBasicFormats();
 }
 
 GranularSamplerAudioProcessor::~GranularSamplerAudioProcessor()
@@ -96,10 +97,8 @@ void GranularSamplerAudioProcessor::prepareToPlay (double sampleRate, int sample
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
 
-    formatManager.registerBasicFormats();
-
     juce::dsp::ProcessSpec spec;
-    
+
     spec.maximumBlockSize = samplesPerBlock;
 
     spec.sampleRate = sampleRate;
@@ -190,10 +189,10 @@ void GranularSamplerAudioProcessor::processBlock (juce::AudioBuffer<float>& buff
     juce::dsp::AudioBlock<float> block(buffer);
     
     // oscilator debugging
-    //buffer.clear();
+    buffer.clear();
 
-    //juce::dsp::ProcessContextReplacing<float> steroContext(block);
-    //osc.process(steroContext);
+    juce::dsp::ProcessContextReplacing<float> steroContext(block);
+    osc.process(steroContext);
 
     auto leftBlock = block.getSingleChannelBlock(0);
     auto rightBlock = block.getSingleChannelBlock(1);
