@@ -1,10 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="Nfb6ks" name="SimpleEQ" projectType="audioplug" useAppConfig="0"
+<JUCERPROJECT id="Nfb6ks" name="GranularSampler" projectType="audioplug" useAppConfig="0"
               addUsingNamespaceToJuceHeader="0" displaySplashScreen="1" jucerFormatVersion="1"
               cppLanguageStandard="17">
-  <MAINGROUP id="D2O5nT" name="SimpleEQ">
+  <MAINGROUP id="D2O5nT" name="GranularSampler">
     <GROUP id="{6CA7C27A-61AD-2E05-4C42-0DD24941DFD8}" name="Source">
+      <FILE id="F44psD" name="CommonEditor.cpp" compile="1" resource="0"
+            file="Source/CommonEditor.cpp"/>
+      <FILE id="EKZ7Jl" name="CommonEditor.h" compile="0" resource="0" file="Source/CommonEditor.h"/>
+      <FILE id="geyADG" name="CommonProcessor.cpp" compile="1" resource="0"
+            file="Source/CommonProcessor.cpp"/>
+      <FILE id="nxNwUW" name="CommonProcessor.h" compile="0" resource="0"
+            file="Source/CommonProcessor.h"/>
+      <FILE id="CWYqQA" name="Analyzer.cpp" compile="1" resource="0" file="Source/Analyzer.cpp"/>
+      <FILE id="eYfYtF" name="Analyzer.h" compile="0" resource="0" file="Source/Analyzer.h"/>
+      <FILE id="aGOug3" name="EQEditor.cpp" compile="1" resource="0" file="Source/EQEditor.cpp"/>
+      <FILE id="d2U7NI" name="EQEditor.h" compile="0" resource="0" file="Source/EQEditor.h"/>
+      <FILE id="uHmhMq" name="EQProcessor.cpp" compile="1" resource="0" file="Source/EQProcessor.cpp"/>
+      <FILE id="TVSfLL" name="EQProcessor.h" compile="0" resource="0" file="Source/EQProcessor.h"/>
       <FILE id="CG0Uke" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="nKxuZE" name="PluginProcessor.h" compile="0" resource="0"

@@ -160,7 +160,7 @@ private:
 struct PathProducer
 {
 public:
-    PathProducer(SingleChannelSampleFifo<SimpleEQAudioProcessor::BlockType>& scsf) :
+    PathProducer(SingleChannelSampleFifo<GranularSamplerAudioProcessor::BlockType>& scsf) :
         channelFifo(&scsf)
     {
         /*
@@ -192,7 +192,7 @@ private:
     //  v
     // GUI
 
-    SingleChannelSampleFifo<SimpleEQAudioProcessor::BlockType>* channelFifo;
+    SingleChannelSampleFifo<GranularSamplerAudioProcessor::BlockType>* channelFifo;
 
     juce::AudioBuffer<float> monoBuffer;
 
@@ -207,7 +207,7 @@ struct ResponseCurveComponent : juce::Component,
     juce::AudioProcessorParameter::Listener,
     juce::Timer
 {
-    ResponseCurveComponent(SimpleEQAudioProcessor& p);
+    ResponseCurveComponent(GranularSamplerAudioProcessor& p);
     ~ResponseCurveComponent();
 
     void parameterValueChanged(int parameterIndex, float newValue) override;
@@ -226,7 +226,7 @@ struct ResponseCurveComponent : juce::Component,
     }
 
 private:
-    SimpleEQAudioProcessor& audioProcessor;
+    GranularSamplerAudioProcessor& audioProcessor;
     juce::Atomic<bool> parametsChanged{ false };
 
     MonoChain monoChain;

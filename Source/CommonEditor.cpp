@@ -1,4 +1,4 @@
-#include "Common.h"
+#include "CommonEditor.h"
 
 void LookAndFeel::drawRotarySlider(juce::Graphics& g, int x, int y,
     int width, int height,
@@ -90,14 +90,14 @@ void LookAndFeel::drawToggleButton(juce::Graphics& g, juce::ToggleButton& toggle
 
         PathStrokeType pst(2.f, PathStrokeType::JointStyle::curved);
 
-        auto color = toggleButton.getToggleState() ? Colours::dimgrey : Colour(0u, 172u, 1u);
+        auto color = toggleButton.isEnabled() && !toggleButton.getToggleState() ? Colour(0u, 172u, 1u) : Colours::dimgrey;
 
         g.setColour(color);
         g.strokePath(powerButton, pst);
         g.drawEllipse(r, 2);
     }
     else if (auto* analyzerButton = dynamic_cast<AnalyzerButton*>(&toggleButton)) {
-        auto color = !toggleButton.getToggleState() ? Colours::dimgrey : Colour(0u, 172u, 1u);
+        auto color = toggleButton.isEnabled() && toggleButton.getToggleState() ? Colour(0u, 172u, 1u) : Colours::dimgrey;
 
         g.setColour(color);
 

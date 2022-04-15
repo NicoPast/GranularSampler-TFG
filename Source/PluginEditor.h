@@ -10,17 +10,19 @@
 
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
-#include "Common.h"
+#include "CommonEditor.h"
 #include "Analyzer.h"
+
+#include "EQEditor.h"
 
 //==============================================================================
 /**
 */
-class SimpleEQAudioProcessorEditor  : public juce::AudioProcessorEditor
+class GranularSamplerAudioProcessorEditor  : public juce::AudioProcessorEditor
 {
 public:
-    SimpleEQAudioProcessorEditor (SimpleEQAudioProcessor& p);
-    ~SimpleEQAudioProcessorEditor() override;
+    GranularSamplerAudioProcessorEditor (GranularSamplerAudioProcessor& p);
+    ~GranularSamplerAudioProcessorEditor() override;
 
     //==============================================================================
     void paint (juce::Graphics&) override;
@@ -33,7 +35,16 @@ public:
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
-    SimpleEQAudioProcessor& audioProcessor;
+    GranularSamplerAudioProcessor& audioProcessor;
+
+    //==============================================================================
+
+#pragma region EQComponents
+    void eqResized(juce::Rectangle<int> bounds);
+
+    void eqSetUp();
+
+    bool eqActive = true;
 
     RotarySliderWithLabels peakFreqSlider,
         peakGainSlider,
@@ -56,19 +67,27 @@ private:
 
     //================================== BypassedButts ===============================
 
-    PowerButton lowCutBypassedButton, peakBypassedButton, highCutBypassedButton;
+    PowerButton eqEnabledButton, lowCutBypassedButton, peakBypassedButton, highCutBypassedButton;
     AnalyzerButton analyzerEnabledButton;
 
     using ButtonAttachment = APVTS::ButtonAttachment;
 
-    ButtonAttachment lowCutBypassedButtonAttachment, 
-        peakBypassedButtonAttachment, 
-        highCutBypassedButtonAttachment, 
+    ButtonAttachment eqEnabledButtonAttachment,
+        lowCutBypassedButtonAttachment,
+        peakBypassedButtonAttachment,
+        highCutBypassedButtonAttachment,
         analyzerEnabledButtonAttachment;
 
     //================================== ResponseCurve ===============================
 
     ResponseCurveComponent responseCurveComponent;
+    
+    //EQEditor eq;
+#pragma endregion EQComponents
+
+    //==============================================================================
+
+    juce::TextButton openFile;
 
     //==============================================================================
 
@@ -77,5 +96,5 @@ private:
     LookAndFeel lnf;
 
     //==============================================================================
-    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (SimpleEQAudioProcessorEditor)
+    JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (GranularSamplerAudioProcessorEditor)
 };

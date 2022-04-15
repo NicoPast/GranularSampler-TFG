@@ -1,13 +1,32 @@
 #pragma once
 
 #include "JuceHeader.h"
-#include "Common.h"
+#include "CommonEditor.h"
 #include "Analyzer.h"
 
 class EQEditor
 {
 public:
+    EQEditor(GranularSamplerAudioProcessor& p);
+    ~EQEditor();
+
+    void init(LookAndFeel& lnf);
+
 	void resized(juce::Rectangle<int> bounds);
+
+    std::vector<juce::Component*> getComps();
+
+    std::vector<juce::Button*> getButtons()
+    {
+        return
+        {
+            &lowCutBypassedButton, 
+            &peakBypassedButton, 
+            &highCutBypassedButton, 
+            &analyzerEnabledButton
+        };
+    }
+
 private:
 	bool active;
 

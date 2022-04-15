@@ -63,7 +63,7 @@ void PathProducer::process(juce::Rectangle<float> fftBounds, double sampleRate)
 
 //==============================================================================
 
-ResponseCurveComponent::ResponseCurveComponent(SimpleEQAudioProcessor& p) :
+ResponseCurveComponent::ResponseCurveComponent(GranularSamplerAudioProcessor& p) :
     audioProcessor(p),
     leftPathProducer(audioProcessor.leftChannelFifo),
     rightPathProducer(audioProcessor.rightChannelFifo)
