@@ -86,55 +86,30 @@ public:
     
     // =============================================================================
 
-    bool createReaderFor(juce::File f)
-    {
-        auto* reader = formatManager.createReaderFor(f);
-        if (reader != nullptr)
-        {
-            auto newSource = std::make_unique<juce::AudioFormatReaderSource>(reader, true);   // [11]
-            transportSource.setSource(newSource.get(), 0, nullptr, reader->sampleRate);
-            readerSource.reset(newSource.release());
-            return true;
-        }
-        return false;
-    }
-
-    juce::AudioBuffer<float> getAudioBufferFromFile(juce::AudioFormatReader* reader)
-    {
-        //juce::AudioFormatManager formatManager - declared in header...`;
-        //auto* reader = formatManager.createReaderFor(file);
-        juce::AudioBuffer<float> audioBuffer;
-        audioBuffer.setSize(reader->numChannels, reader->lengthInSamples);
-        reader->read(&audioBuffer, 0, reader->lengthInSamples, 0, true, true);
-        delete reader;
-        return audioBuffer;
-    }
-
-    void changeState(TransportState newState);
-
-    TransportState getTransportState() { return transpState; };
-
 private:
     MonoChain leftChain, rightChain;
 
     //==============================================================================
 
+#pragma region SamplerPlayer
+public:
+    bool createReaderFor(juce::File f);
+
+    void changeState(const TransportState newState);
+
+    TransportState getTransportState();
+private:
     TransportState transpState;
     juce::AudioFormatManager formatManager;
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
     juce::AudioTransportSource transportSource;
     juce::AudioSourcePlayer player;
 
-    void changeListenerCallback(juce::ChangeBroadcaster* source) override
-    {
-        if (source == &transportSource)
-        {
-            if (transportSource.isPlaying())
-                changeState(Playing);
-            else
-                changeState(Stopped);
-        }
-    }
+    void changeListenerCallback(juce::ChangeBroadcaster* source) override;
+
+#pragma endregion SamplerPlayer
+
+    //==============================================================================
 
 #pragma region EQMethods
 

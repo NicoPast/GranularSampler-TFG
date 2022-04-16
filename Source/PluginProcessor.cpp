@@ -269,7 +269,20 @@ void GranularSamplerAudioProcessor::setStateInformation (const void* data, int s
     }
 }
 
-void GranularSamplerAudioProcessor::changeState(TransportState newState)
+bool GranularSamplerAudioProcessor::createReaderFor(juce::File f)
+{
+    auto* reader = formatManager.createReaderFor(f);
+    if (reader != nullptr)
+    {
+        auto newSource = std::make_unique<juce::AudioFormatReaderSource>(reader, true);   // [11]
+        transportSource.setSource(newSource.get(), 0, nullptr, reader->sampleRate);
+        readerSource.reset(newSource.release());
+        return true;
+    }
+    return false;
+}
+
+void GranularSamplerAudioProcessor::changeState(const TransportState newState)
 {
     if (transpState != newState)
     {
@@ -298,6 +311,22 @@ void GranularSamplerAudioProcessor::changeState(TransportState newState)
     }
     if (getActiveEditor() != nullptr)
         static_cast<GranularSamplerAudioProcessorEditor*>(getActiveEditor())->updateState(transpState);
+}
+
+TransportState GranularSamplerAudioProcessor::getTransportState()
+{
+    return transpState;
+}
+
+void GranularSamplerAudioProcessor::changeListenerCallback(juce::ChangeBroadcaster* source)
+{
+    if (source == &transportSource)
+    {
+        if (transportSource.isPlaying())
+            changeState(Playing);
+        else
+            changeState(Stopped);
+    }
 }
 
 void GranularSamplerAudioProcessor::updatePeakFilter(const ChainSettings& chainSettings)
