@@ -33,6 +33,36 @@ public:
     //================================== My new code ===============================
     //==============================================================================
 
+    void updateState(TransportState state)
+    {
+        if (prevoiusState != state)
+        {
+            prevoiusState = state;
+            switch (state)
+            {
+            case Stopped:                           // [3]
+                stopButton.setEnabled(false);
+                playButton.setEnabled(true);
+                break;
+
+            case Starting:                          // [4]
+                playButton.setEnabled(false);
+                break;
+
+            case Playing:                           // [5]
+                stopButton.setEnabled(true);
+                break;
+
+            case Stopping:                          // [6]
+                break;
+
+            default:
+                DBG("INVALIS STATE RECIEVED");
+                break;
+            }
+        }
+    }
+
 private:
     // This reference is provided as a quick way for your editor to
     // access the processor object that created it.
@@ -40,11 +70,14 @@ private:
 
     //==============================================================================
 
-    juce::TextButton openFileButton, playButton;
+    TransportState prevoiusState;
+    juce::TextButton openFileButton, playButton, stopButton;
+
+    std::unique_ptr<juce::FileChooser> chooser;
 
     void openButtonClicked()
     {
-        auto chooser = std::make_unique<juce::FileChooser>("Select a Wave file to play...",
+        chooser = std::make_unique<juce::FileChooser>("Select a Wave file to play...",
             juce::File{},
             "*.wav");                     // [7]
         auto chooserFlags = juce::FileBrowserComponent::openMode
@@ -64,14 +97,24 @@ private:
             });
     }
 
+    void playButtonClicked()
+    {
+        playButton.setEnabled(false);
+        audioProcessor.changeState(Starting);
+    }
+
+    void stopButtonClicked()
+    {
+        stopButton.setEnabled(false);
+        audioProcessor.changeState(Stopping);
+    }
+
     //==============================================================================
 
 #pragma region EQComponents
     void eqResized(juce::Rectangle<int> bounds);
 
     void eqSetUp(juce::Component::SafePointer<GranularSamplerAudioProcessorEditor> safePtr);
-
-    bool eqActive = true;
 
     RotarySliderWithLabels peakFreqSlider,
         peakGainSlider,

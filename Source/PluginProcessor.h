@@ -23,7 +23,7 @@ enum TransportState
 //==============================================================================
 /**
 */
-class GranularSamplerAudioProcessor  : public juce::AudioProcessor
+class GranularSamplerAudioProcessor  : public juce::AudioProcessor, public juce::ChangeListener
 {
 public:
     //==============================================================================
@@ -98,13 +98,43 @@ public:
         }
         return false;
     }
+
+    juce::AudioBuffer<float> getAudioBufferFromFile(juce::AudioFormatReader* reader)
+    {
+        //juce::AudioFormatManager formatManager - declared in header...`;
+        //auto* reader = formatManager.createReaderFor(file);
+        juce::AudioBuffer<float> audioBuffer;
+        audioBuffer.setSize(reader->numChannels, reader->lengthInSamples);
+        reader->read(&audioBuffer, 0, reader->lengthInSamples, 0, true, true);
+        delete reader;
+        return audioBuffer;
+    }
+
+    void changeState(TransportState newState);
+
+    TransportState getTransportState() { return transpState; };
+
 private:
     MonoChain leftChain, rightChain;
 
+    //==============================================================================
+
+    TransportState transpState;
     juce::AudioFormatManager formatManager;
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
     juce::AudioTransportSource transportSource;
-    TransportState state;
+    juce::AudioSourcePlayer player;
+
+    void changeListenerCallback(juce::ChangeBroadcaster* source) override
+    {
+        if (source == &transportSource)
+        {
+            if (transportSource.isPlaying())
+                changeState(Playing);
+            else
+                changeState(Stopped);
+        }
+    }
 
 #pragma region EQMethods
 
@@ -116,6 +146,8 @@ private:
     void updateFilters();
 
 #pragma endregion EQMethods
+
+    //==============================================================================
 
     // for debugging
     juce::dsp::Oscillator<float> osc;

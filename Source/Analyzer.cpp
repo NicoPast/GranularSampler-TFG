@@ -124,6 +124,8 @@ void ResponseCurveComponent::updateChain()
 {
     auto chainSettings = getChainSettings(audioProcessor.apvts);
 
+    eqBypassed = chainSettings.eqBypassed;
+
     monoChain.setBypassed<ChainPositions::LowCut>(chainSettings.lowCutBypassed);
     monoChain.setBypassed<ChainPositions::Peak>(chainSettings.peakBypassed);
     monoChain.setBypassed<ChainPositions::HighCut>(chainSettings.highCutBypassed);
@@ -165,10 +167,10 @@ void ResponseCurveComponent::paint(juce::Graphics& g)
         double mag = 1.0;
         auto freq = mapToLog10((double)i / (double)w, 20.0, 20000.0);
 
-        if (!monoChain.isBypassed<ChainPositions::Peak>())
+        if (!monoChain.isBypassed<ChainPositions::Peak>() && !eqBypassed)
             mag *= peak.coefficients->getMagnitudeForFrequency(freq, sampleRate);
 
-        if (!monoChain.isBypassed<ChainPositions::LowCut>()) {
+        if (!monoChain.isBypassed<ChainPositions::LowCut>() && !eqBypassed) {
             if (!lowCut.isBypassed<0>())
                 mag *= lowCut.get<0>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
             if (!lowCut.isBypassed<1>())
@@ -179,7 +181,7 @@ void ResponseCurveComponent::paint(juce::Graphics& g)
                 mag *= lowCut.get<3>().coefficients->getMagnitudeForFrequency(freq, sampleRate);
         }
 
-        if (!monoChain.isBypassed<ChainPositions::HighCut>())
+        if (!monoChain.isBypassed<ChainPositions::HighCut>() && !eqBypassed)
         {
             if (!highCut.isBypassed<0>())
                 mag *= highCut.get<0>().coefficients->getMagnitudeForFrequency(freq, sampleRate);

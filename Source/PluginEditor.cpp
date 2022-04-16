@@ -65,18 +65,25 @@ GranularSamplerAudioProcessorEditor::GranularSamplerAudioProcessorEditor (Granul
     }
 
     openFileButton.setLookAndFeel(&lnf);
+    openFileButton.setButtonText("Click to OpenFile");
+
     playButton.setLookAndFeel(&lnf);
+    playButton.setButtonText("Click to Play");
+    playButton.setEnabled(false);
+    playButton.setColour(juce::TextButton::buttonColourId, juce::Colours::green);
+
+    stopButton.setLookAndFeel(&lnf);
+    stopButton.setButtonText("Click to Stop");
+    stopButton.setEnabled(false);
+    stopButton.setColour(juce::TextButton::buttonColourId, juce::Colours::red);
 
     auto safePtr = juce::Component::SafePointer<GranularSamplerAudioProcessorEditor>(this);
 
-    openFileButton.onClick = [safePtr]()
-    {
-        if (auto* comp = safePtr.getComponent())
-        {
-            DBG("hello");
-            comp->openButtonClicked();
-        }
-    };
+    openFileButton.onClick = [this] { openButtonClicked(); };
+    playButton.onClick = [this] { playButtonClicked(); };
+    stopButton.onClick = [this] { stopButtonClicked(); };
+
+    prevoiusState = audioProcessor.getTransportState();
 
     eqSetUp(safePtr);
 
@@ -87,6 +94,7 @@ GranularSamplerAudioProcessorEditor::~GranularSamplerAudioProcessorEditor()
 {
     openFileButton.setLookAndFeel(nullptr);
     playButton.setLookAndFeel(nullptr);
+    stopButton.setLookAndFeel(nullptr);
 
     eqEnabledButton.setLookAndFeel(nullptr);
     peakBypassedButton.setLookAndFeel(nullptr);
@@ -107,6 +115,9 @@ void GranularSamplerAudioProcessorEditor::paint (juce::Graphics& g)
     //g.drawFittedText ("Hello World!", getLocalBounds(), juce::Justification::centred, 1);
     
     g.fillAll (juce::Colours::black);
+
+    // must be done like this, because there may or may not be an editor
+
 }
 
 void GranularSamplerAudioProcessorEditor::resized()
@@ -119,19 +130,19 @@ void GranularSamplerAudioProcessorEditor::resized()
     auto boundsEQ = bounds.removeFromRight(bounds.getWidth() / 2.f);
 
     eqResized(boundsEQ);
+    //eq.resized(boundsEQ);
 
     auto buttonsArea = bounds.removeFromTop(bounds.getHeight() / 8.f);
 
-    auto playButtonArea = buttonsArea.removeFromRight(buttonsArea.getWidth() / 2.f);
+    auto playButtonArea = buttonsArea.removeFromRight(buttonsArea.getWidth() * 2.f / 3.f);
 
+    auto stopButtonArea = playButtonArea.removeFromRight(playButtonArea.getWidth() / 2.f);
 
-    //eq.resized(boundsEQ);
-
-    openFileButton.setButtonText("Click to OpenFile");
     openFileButton.setBounds(buttonsArea);
 
-    playButton.setButtonText("Click to Play");
     playButton.setBounds(playButtonArea);
+    
+    stopButton.setBounds(stopButtonArea);
 }
 
 void GranularSamplerAudioProcessorEditor::eqResized(juce::Rectangle<int> bounds)
@@ -140,7 +151,7 @@ void GranularSamplerAudioProcessorEditor::eqResized(juce::Rectangle<int> bounds)
     auto analyzerEnabledArea = bounds.removeFromTop(25);
 
     analyzerEnabledArea.setWidth(bounds.getWidth() * 3.f / 8.f);
-    //analyzerEnabledArea.setX(bounds.getTopLeft().getX() + 5);
+    analyzerEnabledArea.setX(bounds.getTopLeft().getX() + 5);
     analyzerEnabledArea.removeFromTop(2);
     auto eqEnableArea = analyzerEnabledArea.removeFromLeft(analyzerEnabledArea.getWidth() / 4.f);
 
@@ -192,8 +203,6 @@ void GranularSamplerAudioProcessorEditor::eqSetUp(juce::Component::SafePointer<G
         if (auto* comp = safePtr.getComponent())
         {
             bool bypassed = comp->eqEnabledButton.getToggleState();
-
-            comp->eqActive = bypassed;
 
             comp->peakBypassedButton.setEnabled(!bypassed);
             auto state = comp->peakBypassedButton.getToggleState();
@@ -267,6 +276,7 @@ std::vector<juce::Component*> GranularSamplerAudioProcessorEditor::getComps()
     {
         &openFileButton,
         &playButton,
+        &stopButton,
 
         &peakFreqSlider,
         &peakGainSlider,

@@ -23,6 +23,7 @@ GranularSamplerAudioProcessor::GranularSamplerAudioProcessor()
 #endif
 {
     formatManager.registerBasicFormats();
+    transportSource.addChangeListener(this);
 }
 
 GranularSamplerAudioProcessor::~GranularSamplerAudioProcessor()
@@ -95,7 +96,9 @@ void GranularSamplerAudioProcessor::changeProgramName (int index, const juce::St
 void GranularSamplerAudioProcessor::prepareToPlay (double sampleRate, int samplesPerBlock)
 {
     // Use this method as the place to do any pre-playback
-    // initialisation that you need..
+    // initialisation that you need.
+
+    transportSource.prepareToPlay(samplesPerBlock, sampleRate);
 
     juce::dsp::ProcessSpec spec;
 
@@ -189,10 +192,31 @@ void GranularSamplerAudioProcessor::processBlock (juce::AudioBuffer<float>& buff
     juce::dsp::AudioBlock<float> block(buffer);
     
     // oscilator debugging
-    buffer.clear();
+    //buffer.clear();
 
-    juce::dsp::ProcessContextReplacing<float> steroContext(block);
-    osc.process(steroContext);
+    //juce::dsp::ProcessContextReplacing<float> steroContext(block);
+    //osc.process(steroContext);
+
+    //DBG(block.getNumSamples());
+    //DBG(block.getSample(0,0));
+
+    //if (readerSource.get() == nullptr)
+    //{
+    //    bufferToFill.clearActiveBufferRegion();
+    //    return;
+    //}
+
+    juce::AudioSourceChannelInfo bufferToFill(buffer);
+
+    //bufferToFill.numSamples = buffer.getNumSamples();
+
+    transportSource.getNextAudioBlock(bufferToFill);
+
+    //buffer.copyFrom(0, 0, *bufferToFill.buffer, 0, bufferToFill.startSample, buffer.getNumSamples());
+
+    //transportSource
+    //readerSource->read(&audioBuffer, 0, reader->lengthInSamples, 0, true, true);
+
 
     auto leftBlock = block.getSingleChannelBlock(0);
     auto rightBlock = block.getSingleChannelBlock(1);
@@ -217,7 +241,7 @@ bool GranularSamplerAudioProcessor::hasEditor() const
 
 juce::AudioProcessorEditor* GranularSamplerAudioProcessor::createEditor()
 {
-    return new GranularSamplerAudioProcessorEditor (*this);
+    return new GranularSamplerAudioProcessorEditor(*this);
     //codigo modificado por mi
     // we will miss you, default template :(
     //return new juce::GenericAudioProcessorEditor(*this);
@@ -245,58 +269,58 @@ void GranularSamplerAudioProcessor::setStateInformation (const void* data, int s
     }
 }
 
-//ChainSettings getChainSettings(juce::AudioProcessorValueTreeState& apvts) 
-//{
-//    ChainSettings settings;
-//
-//    // this return the normalized value... not what we want
-//    //apvts.getParameter("LowCut Freq")->getValue();
-//
-//    settings.lowCutFreq = apvts.getRawParameterValue("LowCut Freq")->load();
-//    settings.highCutFreq = apvts.getRawParameterValue("HighCut Freq")->load();
-//    settings.peakFreq = apvts.getRawParameterValue("Peak Freq")->load();
-//    settings.peakGainInDecibels = apvts.getRawParameterValue("Peak Gain")->load();
-//    settings.peakQuality = apvts.getRawParameterValue("Peak Quality")->load();
-//    settings.lowCutSlope = static_cast<Slope>(apvts.getRawParameterValue("LowCut Slope")->load());
-//    settings.highCutSlope = static_cast<Slope>(apvts.getRawParameterValue("HighCut Slope")->load());
-//
-//    settings.lowCutBypassed = apvts.getRawParameterValue("LowCut Bypassed")->load() > 0.5f;
-//    settings.peakBypassed = apvts.getRawParameterValue("Peak Bypassed")->load() > 0.5f;
-//    settings.highCutBypassed = apvts.getRawParameterValue("HighCut Bypassed")->load() > 0.5f;
-//
-//    return settings;
-//}
-//
-//Coefficients makePeakFilter(const ChainSettings& chainSettings, double sampleRate)
-//{
-//    return juce::dsp::IIR::Coefficients<float>::makePeakFilter(
-//        sampleRate,
-//        chainSettings.peakFreq,
-//        chainSettings.peakQuality,
-//        juce::Decibels::decibelsToGain(chainSettings.peakGainInDecibels));
-//}
+void GranularSamplerAudioProcessor::changeState(TransportState newState)
+{
+    if (transpState != newState)
+    {
+        transpState = newState;
+
+        switch (transpState)
+        {
+        case Stopped:                           // [3]
+            transportSource.setPosition(0.0);
+            break;
+
+        case Starting:                          // [4]
+            transportSource.start();
+            break;
+
+        case Playing:
+            break;
+
+        case Stopping:                          // [6]
+            transportSource.stop();
+            break;
+        default:
+            DBG("INVALIS STATE RECIEVED");
+            break;
+        }
+    }
+    if (getActiveEditor() != nullptr)
+        static_cast<GranularSamplerAudioProcessorEditor*>(getActiveEditor())->updateState(transpState);
+}
 
 void GranularSamplerAudioProcessor::updatePeakFilter(const ChainSettings& chainSettings)
 {
     auto peakCoefficients = makePeakFilter(chainSettings, getSampleRate());
 
-    leftChain.setBypassed<ChainPositions::Peak>(chainSettings.peakBypassed);
-    rightChain.setBypassed<ChainPositions::Peak>(chainSettings.peakBypassed);
+    bool byp = chainSettings.peakBypassed || chainSettings.eqBypassed;
+
+    leftChain.setBypassed<ChainPositions::Peak>(byp);
+    rightChain.setBypassed<ChainPositions::Peak>(byp);
 
     updateCoefficients(leftChain.get<ChainPositions::Peak>().coefficients, peakCoefficients);
     updateCoefficients(rightChain.get<ChainPositions::Peak>().coefficients, peakCoefficients);
 }
 
-//void updateCoefficients(Coefficients& old, const Coefficients& replacements)
-//{
-//    *old = *replacements; 
-//}
-
 void GranularSamplerAudioProcessor::updateLowCutFilters(const ChainSettings& chainSettings)
 {
     auto cutCoefficients = makeLowCutFilter(chainSettings, getSampleRate());
-    leftChain.setBypassed<ChainPositions::LowCut>(chainSettings.lowCutBypassed);
-    rightChain.setBypassed<ChainPositions::LowCut>(chainSettings.lowCutBypassed);
+
+    bool byp = chainSettings.lowCutBypassed || chainSettings.eqBypassed;
+
+    leftChain.setBypassed<ChainPositions::LowCut>(byp);
+    rightChain.setBypassed<ChainPositions::LowCut>(byp);
 
     auto& leftLowCut = leftChain.get<ChainPositions::LowCut>();
     auto& rightLowCut = rightChain.get<ChainPositions::LowCut>();
@@ -308,8 +332,11 @@ void GranularSamplerAudioProcessor::updateLowCutFilters(const ChainSettings& cha
 void GranularSamplerAudioProcessor::updateHighCutFilters(const ChainSettings& chainSettings)
 {
     auto highCutCoefficients = makeHighCutFilter(chainSettings, getSampleRate());
-    leftChain.setBypassed<ChainPositions::HighCut>(chainSettings.highCutBypassed);
-    rightChain.setBypassed<ChainPositions::HighCut>(chainSettings.highCutBypassed);
+
+    bool byp = chainSettings.highCutBypassed || chainSettings.eqBypassed;
+
+    leftChain.setBypassed<ChainPositions::HighCut>(byp);
+    rightChain.setBypassed<ChainPositions::HighCut>(byp);
 
     auto& leftHighCut = leftChain.get<ChainPositions::HighCut>();
     auto& rightHighCut = rightChain.get<ChainPositions::HighCut>();

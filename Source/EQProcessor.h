@@ -16,7 +16,7 @@ struct ChainSettings {
 
     Slope lowCutSlope{ Slope::Slope_12 }, highCutSlope{ Slope::Slope_12 };
 
-    bool lowCutBypassed{ false }, peakBypassed{ false }, highCutBypassed{ false };
+    bool eqBypassed{ false }, lowCutBypassed{ false }, peakBypassed{ false }, highCutBypassed{ false };
 };
 
 using Filter = juce::dsp::IIR::Filter<float>;
