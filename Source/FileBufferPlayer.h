@@ -8,41 +8,21 @@ class GranularSamplerAudioProcessor;
 class FileBufferPlayer
 {
 public:
-    FileBufferPlayer(GranularSamplerAudioProcessor* processor) :
-        audioProcessor(processor),
-        playerPos(0), state(Stopped), playerPlaying(false)
-    {
-    }
+    FileBufferPlayer(GranularSamplerAudioProcessor* processor);
 
-    ~FileBufferPlayer()
-    {
-    }
+    ~FileBufferPlayer();
 
-    void reset()
-    {
-        playerPos = 0;
-        state = Stopped;
-        playerPlaying = false;
-    }
+    void reset();
 
-    TransportState getState()
-    {
-        return state;
-    }
+    TransportState getState();
 
-    void changeState(const TransportState newState);
+    void setState(const TransportState newState);
 
     void copyNextBlockFromBufferFileTo(juce::AudioBuffer<float>& buff);
 
-    juce::AudioBuffer<float>& getBuffer()
-    {
-        return bufferFile;
-    }
+    juce::AudioBuffer<float>& getBuffer();
 
-    void setBuffer(juce::AudioBuffer<float> buff)
-    {
-        bufferFile = buff;
-    }
+    void setBuffer(const juce::AudioBuffer<float>& buff);
 
 private:
     GranularSamplerAudioProcessor* audioProcessor;
@@ -50,5 +30,5 @@ private:
     juce::AudioBuffer<float> bufferFile;
     juce::int64 playerPos;
     bool playerPlaying;
-    TransportState state;
+    TransportState playerState;
 };

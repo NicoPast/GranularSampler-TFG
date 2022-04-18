@@ -13,6 +13,97 @@
 #include "EQProcessor.h"
 #include "FileBufferPlayer.h"
 
+class Grain
+{
+public:
+    Grain() {}
+    ~Grain() {}
+
+    void setADSR(double sampleRate, float attackSecs, float decaySecs,
+        float sustSecs, float relSecs)
+    {
+        adsr.setSampleRate(sampleRate);
+        
+        juce::ADSR::Parameters param(attackSecs, decaySecs, sustSecs, relSecs);
+        adsr.setParameters(param);
+
+        adsr.applyEnvelopeToBuffer(grainBuffer, startPos, endPos);
+    }
+
+    void setADSR(double sampleRate, juce::int64 attackSamp, juce::int64 decaySamp,
+        juce::int64 sustSamp, juce::int64 relSamp)
+    {
+        adsr.setSampleRate(sampleRate);
+
+        juce::ADSR::Parameters param(attackSamp / sampleRate, decaySamp / sampleRate,
+            sustSamp / sampleRate, relSamp / sampleRate);
+        adsr.setParameters(param);
+
+        adsr.applyEnvelopeToBuffer(grainBuffer, startPos, endPos);
+    }
+    
+    void cutAlreadyPlayedSamples(juce::int64 currentSample, juce::int64 playedSamples)
+    {
+
+    }
+
+    void setBuffer(const juce::AudioBuffer<float>& buff)
+    {
+        grainBuffer = buff;
+    }
+
+    juce::AudioBuffer<float>& getBuffer()
+    {
+        return grainBuffer;
+    }
+
+private:
+    juce::AudioBuffer<float> grainBuffer;
+    juce::int64 startingSample;
+
+    juce::ADSR adsr;
+
+    // random variation of Grain
+    juce::int64 startPos;
+    juce::int64 endPos;
+    // TODO: ????? lo hago?
+    float paning; // -1.f left, 0 centered, 1.f right
+    float pitch; // altered pitch of the Grain
+};
+
+class GrainSampler
+{
+
+// idea para la densidad
+// se tira un d100, si la densidad es mayor a 100, seguro se coge uno
+// se le resta 100 a la densidad
+// mientras no falle, sigue calculando un nuevo grano
+// los granos persistentes, restan 100 por cada
+public:
+    GrainSampler() {}
+    ~GrainSampler() {}
+
+    void getNextAudioBlock(juce::AudioBuffer<float>& buffer)
+    {
+        // usar el sistema de estado del player aqui tambien
+        if (currentSample > totalNumSamples)
+            return;
+
+        currentSample += buffer.getNumSamples();
+    }
+
+private:
+
+    float totalSecsPlayingTime;
+    juce::int64 currentSample;
+    juce::int64 totalNumSamples;
+
+    float grainDensity;
+
+    // unaltered grains which will be playing
+    std::list<Grain> playingGrain;
+};
+
 //==============================================================================
 /**
 */
@@ -108,7 +199,11 @@ private:
 #pragma endregion SamplerPlayer
 
     // TODO:
-    // buffer comodo con todo el audio (quizas tenga que rehacer el Sampler)
+    // buffer comodo con todo el audio (quizas tenga que rehacer el Sampler) -> DONE
+    // 
+    //==============================================================================
+
+#pragma region GranularSampler
 
     // grain Duration
 
@@ -123,6 +218,8 @@ private:
     //      pan
     //      pitch
     //      
+
+#pragma endregion GranularSampler
 
     //==============================================================================
 

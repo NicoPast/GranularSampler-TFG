@@ -1,7 +1,5 @@
 #pragma once
 
-#include "JuceHeader.h"
-
 template<typename T>
 struct Fifo
 {

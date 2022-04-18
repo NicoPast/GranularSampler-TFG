@@ -197,9 +197,6 @@ void GranularSamplerAudioProcessor::processBlock (juce::AudioBuffer<float>& buff
     //juce::dsp::ProcessContextReplacing<float> steroContext(block);
     //osc.process(steroContext);
 
-    //DBG(block.getNumSamples());
-    //DBG(block.getSample(0,0));
-
     //if (readerSource.get() == nullptr)
     //{
     //    bufferToFill.clearActiveBufferRegion();
@@ -218,7 +215,6 @@ void GranularSamplerAudioProcessor::processBlock (juce::AudioBuffer<float>& buff
 
     //transportSource
     //readerSource->read(&audioBuffer, 0, reader->lengthInSamples, 0, true, true);
-
 
     auto leftBlock = block.getSingleChannelBlock(0);
     auto rightBlock = block.getSingleChannelBlock(1);
@@ -297,11 +293,12 @@ bool GranularSamplerAudioProcessor::createReaderFor(juce::File f)
 
 void GranularSamplerAudioProcessor::changeState(const TransportState newState)
 {
+    // ZOMBIE
     //if (transpState != newState)
     //{
         //transpState = newState;
 
-        buffPlay.changeState(newState);
+        buffPlay.setState(newState);
 
         //switch (transpState)
         //{
@@ -330,6 +327,7 @@ void GranularSamplerAudioProcessor::changeState(const TransportState newState)
 
 void GranularSamplerAudioProcessor::updateState(const TransportState newState)
 {
+    // ZOMBIE
     //transpState = newState;
     if (getActiveEditor() != nullptr)
         static_cast<GranularSamplerAudioProcessorEditor*>(getActiveEditor())->updateState(newState);
@@ -342,6 +340,7 @@ TransportState GranularSamplerAudioProcessor::getTransportState()
 
 void GranularSamplerAudioProcessor::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
+    // ZOMBIE
     //if (source == &transportSource)
     //{
     //    if (transportSource.isPlaying())
