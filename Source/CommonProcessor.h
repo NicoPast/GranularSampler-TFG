@@ -133,3 +133,11 @@ private:
         ++fifoIndex;
     }
 };
+
+enum TransportState
+{
+    Stopped,
+    Starting,
+    Playing,
+    Stopping
+};

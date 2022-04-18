@@ -11,19 +11,13 @@
 #include <JuceHeader.h>
 #include "CommonProcessor.h"
 #include "EQProcessor.h"
-
-enum TransportState
-{
-    Stopped,
-    Starting,
-    Playing,
-    Stopping
-};
+#include "FileBufferPlayer.h"
 
 //==============================================================================
 /**
 */
-class GranularSamplerAudioProcessor  : public juce::AudioProcessor, public juce::ChangeListener
+class GranularSamplerAudioProcessor  : public juce::AudioProcessor, 
+                                       public juce::ChangeListener
 {
 public:
     //==============================================================================
@@ -97,17 +91,38 @@ public:
 
     void changeState(const TransportState newState);
 
+    void updateState(const TransportState newState);
+
     TransportState getTransportState();
 private:
-    TransportState transpState;
+    //TransportState transpState;
     juce::AudioFormatManager formatManager;
     std::unique_ptr<juce::AudioFormatReaderSource> readerSource;
     juce::AudioTransportSource transportSource;
-    juce::AudioSourcePlayer player;
+    juce::AudioSourcePlayer playerAudioSource;
+
+    FileBufferPlayer buffPlay;
 
     void changeListenerCallback(juce::ChangeBroadcaster* source) override;
 
 #pragma endregion SamplerPlayer
+
+    // TODO:
+    // buffer comodo con todo el audio (quizas tenga que rehacer el Sampler)
+
+    // grain Duration
+
+    // Density of Grain
+    // Number of Grains
+    // Duration of reproduction
+
+    // tipo de envolvente (de base solo OSC, pero puedo añadir ADR tambien y existe Gaussinana)
+
+    // posibilidad de que tenga variacion aleatoria?:
+    //      duration
+    //      pan
+    //      pitch
+    //      
 
     //==============================================================================
 

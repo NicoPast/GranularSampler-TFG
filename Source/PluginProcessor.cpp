@@ -19,7 +19,7 @@ GranularSamplerAudioProcessor::GranularSamplerAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       )
+                       ), buffPlay(this)
 #endif
 {
     formatManager.registerBasicFormats();
@@ -206,11 +206,13 @@ void GranularSamplerAudioProcessor::processBlock (juce::AudioBuffer<float>& buff
     //    return;
     //}
 
-    juce::AudioSourceChannelInfo bufferToFill(buffer);
+    //juce::AudioSourceChannelInfo bufferToFill(buffer);
 
     //bufferToFill.numSamples = buffer.getNumSamples();
 
-    transportSource.getNextAudioBlock(bufferToFill);
+    //transportSource.getNextAudioBlock(bufferToFill);
+
+    buffPlay.copyNextBlockFromBufferFileTo(buffer);
 
     //buffer.copyFrom(0, 0, *bufferToFill.buffer, 0, bufferToFill.startSample, buffer.getNumSamples());
 
@@ -277,6 +279,17 @@ bool GranularSamplerAudioProcessor::createReaderFor(juce::File f)
         auto newSource = std::make_unique<juce::AudioFormatReaderSource>(reader, true);   // [11]
         transportSource.setSource(newSource.get(), 0, nullptr, reader->sampleRate);
         readerSource.reset(newSource.release());
+        
+        // is 2 cause its always 2 from the AudioFormatReaderSource
+        juce::AudioBuffer<float> buffer(2, transportSource.getTotalLength());
+        juce::AudioSourceChannelInfo bufferToFill(buffer);
+        transportSource.start();
+        transportSource.getNextAudioBlock(bufferToFill);
+        transportSource.stop();
+        transportSource.setPosition(0.0);
+        buffPlay.setBuffer(buffer);
+
+        buffPlay.reset();
         return true;
     }
     return false;
@@ -284,49 +297,58 @@ bool GranularSamplerAudioProcessor::createReaderFor(juce::File f)
 
 void GranularSamplerAudioProcessor::changeState(const TransportState newState)
 {
-    if (transpState != newState)
-    {
-        transpState = newState;
+    //if (transpState != newState)
+    //{
+        //transpState = newState;
 
-        switch (transpState)
-        {
-        case Stopped:                           // [3]
-            transportSource.setPosition(0.0);
-            break;
+        buffPlay.changeState(newState);
 
-        case Starting:                          // [4]
-            transportSource.start();
-            break;
+        //switch (transpState)
+        //{
+        //case Stopped:                           // [3]
+        //    transportSource.setPosition(0.0);
+        //    break;
 
-        case Playing:
-            break;
+        //case Starting:                          // [4]
+        //    transportSource.start();
+        //    break;
 
-        case Stopping:                          // [6]
-            transportSource.stop();
-            break;
-        default:
-            DBG("INVALIS STATE RECIEVED");
-            break;
-        }
-    }
+        //case Playing:
+        //    break;
+
+        //case Stopping:                          // [6]
+        //    transportSource.stop();
+        //    break;
+        //default:
+        //    DBG("INVALIS STATE RECIEVED");
+        //    break;
+        //}
+
+        updateState(newState);
+    //}
+}
+
+void GranularSamplerAudioProcessor::updateState(const TransportState newState)
+{
+    //transpState = newState;
     if (getActiveEditor() != nullptr)
-        static_cast<GranularSamplerAudioProcessorEditor*>(getActiveEditor())->updateState(transpState);
+        static_cast<GranularSamplerAudioProcessorEditor*>(getActiveEditor())->updateState(newState);
 }
 
 TransportState GranularSamplerAudioProcessor::getTransportState()
 {
-    return transpState;
+    return buffPlay.getState();
 }
 
 void GranularSamplerAudioProcessor::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
-    if (source == &transportSource)
-    {
-        if (transportSource.isPlaying())
-            changeState(Playing);
-        else
-            changeState(Stopped);
-    }
+    //if (source == &transportSource)
+    //{
+    //    if (transportSource.isPlaying())
+    //        changeState(Playing);
+    //    else
+    //        changeState(Stopped);
+    //}
 }
 
 void GranularSamplerAudioProcessor::updatePeakFilter(const ChainSettings& chainSettings)

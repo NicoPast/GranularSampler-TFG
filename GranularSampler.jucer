@@ -5,6 +5,10 @@
               cppLanguageStandard="17">
   <MAINGROUP id="fMZ5yW" name="GranularSampler">
     <GROUP id="{FEF5CF10-46EA-3883-9C19-C447546C5235}" name="Source">
+      <FILE id="h9RKJs" name="FileBufferPlayer.cpp" compile="1" resource="0"
+            file="Source/FileBufferPlayer.cpp"/>
+      <FILE id="Ep2Uyz" name="FileBufferPlayer.h" compile="0" resource="0"
+            file="Source/FileBufferPlayer.h"/>
       <FILE id="ea6xKM" name="Analyzer.cpp" compile="1" resource="0" file="Source/Analyzer.cpp"/>
       <FILE id="eDHWcF" name="Analyzer.h" compile="0" resource="0" file="Source/Analyzer.h"/>
       <FILE id="f48sQf" name="CommonEditor.cpp" compile="1" resource="0"

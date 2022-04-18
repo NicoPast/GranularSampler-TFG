@@ -163,6 +163,9 @@ void GranularSamplerAudioProcessorEditor::updateState(TransportState state)
     if (prevoiusState != state)
     {
         prevoiusState = state;
+
+        // locks the thread so it doesn't crash when is called from the processor
+        const juce::MessageManagerLock mmLock;
         switch (state)
         {
         case Stopped:                           // [3]
