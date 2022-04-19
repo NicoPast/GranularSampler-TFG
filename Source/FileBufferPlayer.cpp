@@ -50,7 +50,7 @@ void FileBufferPlayer::setState(const TransportState newState)
             DBG("INVALIS STATE RECIEVED");
             break;
         }
-        audioProcessor->updateState(playerState);
+        audioProcessor->updatePlayerState(playerState);
     }
 }
 
@@ -90,4 +90,19 @@ juce::AudioBuffer<float>& FileBufferPlayer::getBuffer()
 void FileBufferPlayer::setBuffer(const juce::AudioBuffer<float>& buff)
 {
     bufferFile = buff;
+    /*
+    old ost
+    ===========
+    0.881792
+    0.88156
+    ===========
+    -0.88173
+    -0.863794
+    */
+    DBG("===========");
+    DBG(juce::findMaximum<float>(bufferFile.getReadPointer(0), bufferFile.getNumSamples()));
+    DBG(juce::findMaximum<float>(bufferFile.getReadPointer(1), bufferFile.getNumSamples()));
+    DBG("===========");
+    DBG(juce::findMinimum<float>(bufferFile.getReadPointer(0), bufferFile.getNumSamples()));
+    DBG(juce::findMinimum<float>(bufferFile.getReadPointer(1), bufferFile.getNumSamples()));
 }

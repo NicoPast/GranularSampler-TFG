@@ -211,6 +211,10 @@ void GranularSamplerAudioProcessor::processBlock (juce::AudioBuffer<float>& buff
 
     buffPlay.copyNextBlockFromBufferFileTo(buffer);
 
+    //buffer.clear();
+
+    granularSampler.getNextAudioBlock(buffer);
+
     //buffer.copyFrom(0, 0, *bufferToFill.buffer, 0, bufferToFill.startSample, buffer.getNumSamples());
 
     //transportSource
@@ -285,6 +289,8 @@ bool GranularSamplerAudioProcessor::createReaderFor(juce::File f)
         transportSource.setPosition(0.0);
         buffPlay.setBuffer(buffer);
 
+        granularSampler.setFileBuffer(&buffPlay);
+
         buffPlay.reset();
         return true;
     }
@@ -299,6 +305,7 @@ void GranularSamplerAudioProcessor::changeState(const TransportState newState)
         //transpState = newState;
 
         buffPlay.setState(newState);
+        granularSampler.setState(newState);
 
         //switch (transpState)
         //{
@@ -321,16 +328,22 @@ void GranularSamplerAudioProcessor::changeState(const TransportState newState)
         //    break;
         //}
 
-        updateState(newState);
+        updatePlayerState(newState);
     //}
 }
 
-void GranularSamplerAudioProcessor::updateState(const TransportState newState)
+void GranularSamplerAudioProcessor::updatePlayerState(const TransportState newState)
 {
     // ZOMBIE
     //transpState = newState;
     if (getActiveEditor() != nullptr)
         static_cast<GranularSamplerAudioProcessorEditor*>(getActiveEditor())->updateState(newState);
+}
+
+void GranularSamplerAudioProcessor::updateSamplerState(const TransportState newState)
+{
+    //if (getActiveEditor() != nullptr)
+        //static_cast<GranularSamplerAudioProcessorEditor*>(getActiveEditor())->updateState(newState);
 }
 
 TransportState GranularSamplerAudioProcessor::getTransportState()

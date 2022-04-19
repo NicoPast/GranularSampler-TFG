@@ -17,6 +17,24 @@ class Grain
 {
 public:
     Grain() {}
+    Grain(juce::AudioBuffer<float> buff) : grainBuffer(buff)
+    {
+        applyADSR();
+    }
+    Grain(juce::AudioBuffer<float> buff, juce::int64 startPos, juce::int64 numSamples)
+    {
+        grainBuffer.setSize(buff.getNumChannels(), numSamples);
+        
+        for (int i = 0; i < buff.getNumChannels(); i++)
+        {
+            grainBuffer.copyFrom(i, 0, buff, 0, startPos, numSamples);
+        }
+
+        startingSample = startPos;
+        endPos = numSamples;
+
+        setADSR(44100.0, numSamples/4, numSamples / 4, numSamples / 4, numSamples / 4);
+    }
     ~Grain() {}
 
     void setADSR(double sampleRate, float attackSecs, float decaySecs,
@@ -39,7 +57,10 @@ public:
             sustSamp / sampleRate, relSamp / sampleRate);
         adsr.setParameters(param);
 
+        adsr.noteOn();
         adsr.applyEnvelopeToBuffer(grainBuffer, startPos, endPos);
+        adsr.noteOff();
+        adsr.applyEnvelopeToBuffer(grainBuffer, endPos - decaySamp, relSamp);
     }
     
     void cutAlreadyPlayedSamples(juce::int64 currentSample, juce::int64 playedSamples)
@@ -50,6 +71,7 @@ public:
     void setBuffer(const juce::AudioBuffer<float>& buff)
     {
         grainBuffer = buff;
+        applyADSR();
     }
 
     juce::AudioBuffer<float>& getBuffer()
@@ -57,21 +79,40 @@ public:
         return grainBuffer;
     }
 
+    juce::int64 getStartPos()
+    {
+        return startPos;
+    }
+
+    juce::int64 getEndPos()
+    {
+        return endPos;
+    }
+
 private:
+    void applyADSR()
+    {
+        adsr.applyEnvelopeToBuffer(grainBuffer, startPos, endPos);
+        //for (int i = 0; i < grainBuffer.getNumSamples(); i++)
+        //{
+        //    DBG(grainBuffer.getSample(0, i));
+        //}
+    }
+
     juce::AudioBuffer<float> grainBuffer;
     juce::int64 startingSample;
 
     juce::ADSR adsr;
 
     // random variation of Grain
-    juce::int64 startPos;
+    juce::int64 startPos = 0;
     juce::int64 endPos;
     // TODO: ????? lo hago?
     float paning; // -1.f left, 0 centered, 1.f right
     float pitch; // altered pitch of the Grain
 };
 
-class GrainSampler
+class GranularSampler
 {
 // idea para la densidad
 // se tira un d100, si la densidad es mayor a 100, seguro se coge uno
@@ -85,27 +126,130 @@ class GrainSampler
 // si es menos de 100, lo utilizo como un minimo de porcentaje que debo ocupar
 
 public:
-    GrainSampler() {}
-    ~GrainSampler() {}
+    GranularSampler() {}
+    ~GranularSampler() {}
 
     void getNextAudioBlock(juce::AudioBuffer<float>& buffer)
     {
         // usar el sistema de estado del player aqui tambien
-        if (currentSample > totalNumSamples)
+        if (samplerState == Stopping)
+        {
+            setState(Stopped);
+            return;
+        }
+        if (!samplerPlaying)
             return;
 
-        currentSample += buffer.getNumSamples();
+        if (samplerState == Starting)
+            setState(Playing);
+
+        int numSamples = buffer.getNumSamples();
+        if (totalNumSamples < numSamples + samplerPos)
+        {
+            setState(Stopping);
+            numSamples = totalNumSamples - samplerPos;
+        }
+
+        //dame nuevos granos
+
+        juce::int64 size = buffer.getNumSamples();
+
+        if (fileBuff != nullptr)
+        {
+            juce::int64 randomPos = juce::Random::getSystemRandom()
+                .nextInt(fileBuff->getBuffer().getNumSamples() - size);
+
+            Grain g(fileBuff->getBuffer(), randomPos, size);
+
+            //de todos los granos metelos en el buffer
+            
+            for (int i = 0; i < buffer.getNumChannels(); i++)
+            {
+                buffer.copyFrom(i, 0, g.getBuffer(), i, 0, numSamples);
+            }
+        }
+
+        //normaliza el resultado
+
+        samplerPos += numSamples;
+    }
+
+    void updateADSRPercs(float att, float dec, float sus, float rel)
+    {
+
+    }
+
+    void setState(TransportState newState)
+    {
+        if (samplerState != newState)
+        {
+            samplerState = newState;
+
+            switch (samplerState)
+            {
+            case Stopped:                           // [3]
+                samplerPos = 0;
+                break;
+
+            case Starting:                          // [4]
+                samplerPlaying = true;
+                break;
+
+            case Playing:
+                break;
+
+            case Stopping:                          // [6]
+                samplerPlaying = false;
+                break;
+            default:
+                DBG("INVALIS STATE RECIEVED");
+                break;
+            }
+            //audioProcessor->updateSamplerState(samplerState);
+        }
+    }
+
+    TransportState getState()
+    {
+        return samplerState;
+    }
+
+    FileBufferPlayer* getFileBuffer()
+    {
+        return fileBuff;
+    }
+
+    void setFileBuffer(FileBufferPlayer* fBuff)
+    {
+        fileBuff = fBuff;
+        totalNumSamples = fileBuff->getBuffer().getNumSamples();
     }
 
 private:
+    //GranularSamplerAudioProcessor* audioProcessor;
+    FileBufferPlayer* fileBuff = nullptr;
+    
+    TransportState samplerState;
+    bool samplerPlaying = false;
 
     float totalSecsPlayingTime;
-    juce::int64 currentSample;
+    juce::int64 samplerPos = 0;
     juce::int64 totalNumSamples;
 
     float grainDensity;
+    float grainDuration;
 
-    // unaltered grains which will be playing
+    float attackPerc;
+    float decayPerc;
+    float sustPerc;
+    float relPerc;
+
+    float startingPositionRandom;
+    float densityRandom;
+    float panRandom;
+    float pitchRandom;
+
+    // unaltered grains which will still be playing
     std::list<Grain> playingGrain;
 };
 
@@ -187,7 +331,9 @@ public:
 
     void changeState(const TransportState newState);
 
-    void updateState(const TransportState newState);
+    void updateSamplerState(const TransportState newState);
+
+    void updatePlayerState(const TransportState newState);
 
     TransportState getTransportState();
 private:
@@ -209,6 +355,8 @@ private:
     //==============================================================================
 
 #pragma region GranularSampler
+
+    GranularSampler granularSampler;
 
     // grain Duration
 
