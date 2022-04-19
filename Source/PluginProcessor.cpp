@@ -209,9 +209,11 @@ void GranularSamplerAudioProcessor::processBlock (juce::AudioBuffer<float>& buff
 
     //transportSource.getNextAudioBlock(bufferToFill);
 
+    //buffer.clear();
+
     buffPlay.copyNextBlockFromBufferFileTo(buffer);
 
-    //buffer.clear();
+    buffer.clear();
 
     granularSampler.getNextAudioBlock(buffer);
 

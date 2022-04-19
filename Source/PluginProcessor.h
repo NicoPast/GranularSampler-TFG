@@ -58,14 +58,15 @@ public:
         adsr.setParameters(param);
 
         adsr.noteOn();
-        adsr.applyEnvelopeToBuffer(grainBuffer, startPos, endPos);
+        adsr.applyEnvelopeToBuffer(grainBuffer, startPos, endPos - relSamp);
         adsr.noteOff();
-        adsr.applyEnvelopeToBuffer(grainBuffer, endPos - decaySamp, relSamp);
+        adsr.applyEnvelopeToBuffer(grainBuffer, endPos - relSamp, relSamp);
     }
     
-    void cutAlreadyPlayedSamples(juce::int64 currentSample, juce::int64 playedSamples)
+    bool advanceGrainStartPos(juce::int64 playedSamples)
     {
-
+        startPos += playedSamples;
+        return startPos >= endPos;
     }
 
     void setBuffer(const juce::AudioBuffer<float>& buff)
@@ -89,6 +90,10 @@ public:
         return endPos;
     }
 
+    juce::int64 getRemainingSamples()
+    {
+        return endPos - startPos;
+    }
 private:
     void applyADSR()
     {
@@ -127,7 +132,14 @@ class GranularSampler
 
 public:
     GranularSampler() {}
-    ~GranularSampler() {}
+    ~GranularSampler() 
+    {
+        while (!playingGrain.empty())
+        {
+            delete playingGrain.front();
+            playingGrain.pop_front();
+        }
+    }
 
     void getNextAudioBlock(juce::AudioBuffer<float>& buffer)
     {
@@ -143,30 +155,49 @@ public:
         if (samplerState == Starting)
             setState(Playing);
 
-        int numSamples = buffer.getNumSamples();
+        juce::int64 numSamples = buffer.getNumSamples();
         if (totalNumSamples < numSamples + samplerPos)
         {
             setState(Stopping);
             numSamples = totalNumSamples - samplerPos;
         }
 
-        //dame nuevos granos
+        //dame nuevos granos en funcion de la densidad
 
-        juce::int64 size = buffer.getNumSamples();
+        juce::int64 grainSize = buffer.getNumSamples() * JUCE_LIVE_CONSTANT(80.5f);
 
         if (fileBuff != nullptr)
         {
             juce::int64 randomPos = juce::Random::getSystemRandom()
-                .nextInt(fileBuff->getBuffer().getNumSamples() - size);
+                .nextInt(fileBuff->getBuffer().getNumSamples() - grainSize);
 
-            Grain g(fileBuff->getBuffer(), randomPos, size);
-
-            //de todos los granos metelos en el buffer
+            Grain* g;
+            // gestiona los granos que sonaban de antes
+            if (playingGrain.empty())
+            {
+                g = new Grain(fileBuff->getBuffer(), randomPos, grainSize);
+                playingGrain.push_back(g);
+            }
+            else g = playingGrain.front();
             
+            //metelos en el buffer
+            juce::int64 end = juce::jmin<juce::int64>(numSamples, g->getRemainingSamples());
             for (int i = 0; i < buffer.getNumChannels(); i++)
             {
-                buffer.copyFrom(i, 0, g.getBuffer(), i, 0, numSamples);
+                buffer.copyFrom(i, 0, g->getBuffer(), i, g->getStartPos(), end);
             }
+
+            if (g->advanceGrainStartPos(end))
+            {
+                delete g;
+                playingGrain.clear();
+            }
+
+            //DBG("============");
+            //for (int i = 0; i < buffer.getNumSamples(); i++)
+            //{
+            //    DBG(buffer.getSample(0, i));
+            //}
         }
 
         //normaliza el resultado
@@ -250,7 +281,7 @@ private:
     float pitchRandom;
 
     // unaltered grains which will still be playing
-    std::list<Grain> playingGrain;
+    std::list<Grain*> playingGrain;
 };
 
 //==============================================================================
