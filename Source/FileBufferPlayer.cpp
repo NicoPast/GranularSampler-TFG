@@ -99,6 +99,9 @@ void FileBufferPlayer::setBuffer(const juce::AudioBuffer<float>& buff)
     -0.88173
     -0.863794
     */
+    minMaxValuesLeftChannel = bufferFile.findMinMax(0, 0, bufferFile.getNumSamples());
+    minMaxValuesRightChannel = bufferFile.findMinMax(1, 0, bufferFile.getNumSamples());
+
     DBG("===========");
     DBG(juce::findMaximum<float>(bufferFile.getReadPointer(0), bufferFile.getNumSamples()));
     DBG(juce::findMaximum<float>(bufferFile.getReadPointer(1), bufferFile.getNumSamples()));

@@ -21,19 +21,23 @@ public:
     {
         applyADSR();
     }
-    Grain(juce::AudioBuffer<float> buff, juce::int64 startPos, juce::int64 numSamples)
+    Grain(juce::AudioBuffer<float> buff, juce::int64 originPos, juce::int64 staPos, juce::int64 numSamples)
     {
         grainBuffer.setSize(buff.getNumChannels(), numSamples);
         
         for (int i = 0; i < buff.getNumChannels(); i++)
         {
-            grainBuffer.copyFrom(i, 0, buff, 0, startPos, numSamples);
+            grainBuffer.copyFrom(i, 0, buff, 0, originPos, numSamples);
         }
 
-        startingSample = startPos;
+        startingSample = originPos;
+        startPos = staPos;
+        currentPos = startPos;
         endPos = numSamples;
 
-        setADSR(44100.0, numSamples/4, numSamples / 4, numSamples / 4, numSamples / 4);
+        juce::int64 total = endPos - staPos;
+
+        setADSR(44100.0, total /4, total / 4, total / 4, total / 4);
     }
     ~Grain() {}
 
@@ -57,16 +61,17 @@ public:
             sustSamp / sampleRate, relSamp / sampleRate);
         adsr.setParameters(param);
 
+        //peta si startPos > relSamp
         adsr.noteOn();
-        adsr.applyEnvelopeToBuffer(grainBuffer, startPos, endPos - relSamp);
+        adsr.applyEnvelopeToBuffer(grainBuffer, startPos, endPos - startPos - relSamp);
         adsr.noteOff();
         adsr.applyEnvelopeToBuffer(grainBuffer, endPos - relSamp, relSamp);
     }
     
     bool advanceGrainStartPos(juce::int64 playedSamples)
     {
-        startPos += playedSamples;
-        return startPos >= endPos;
+        currentPos += playedSamples;
+        return currentPos >= endPos;
     }
 
     void setBuffer(const juce::AudioBuffer<float>& buff)
@@ -85,14 +90,26 @@ public:
         return startPos;
     }
 
+    juce::int64 getCurrentPos()
+    {
+        return currentPos;
+    }
+
     juce::int64 getEndPos()
     {
         return endPos;
     }
 
+    juce::int64 getFirstSample()
+    {
+        if (currentPos == startPos)
+            return startPos;
+        return 0;
+    }
+
     juce::int64 getRemainingSamples()
     {
-        return endPos - startPos;
+        return endPos - currentPos;
     }
 private:
     void applyADSR()
@@ -111,6 +128,7 @@ private:
 
     // random variation of Grain
     juce::int64 startPos = 0;
+    juce::int64 currentPos;
     juce::int64 endPos;
     // TODO: ????? lo hago?
     float paning; // -1.f left, 0 centered, 1.f right
@@ -155,7 +173,7 @@ public:
         if (samplerState == Starting)
             setState(Playing);
 
-        juce::int64 numSamples = buffer.getNumSamples();
+        int numSamples = buffer.getNumSamples();
         if (totalNumSamples < numSamples + samplerPos)
         {
             setState(Stopping);
@@ -164,44 +182,72 @@ public:
 
         //dame nuevos granos en funcion de la densidad
 
-        juce::int64 grainSize = buffer.getNumSamples() * JUCE_LIVE_CONSTANT(80.5f);
 
         if (fileBuff != nullptr)
         {
-            juce::int64 randomPos = juce::Random::getSystemRandom()
+            juce::int64 grainSize = juce::Random::getSystemRandom().nextFloat()
+                * (buffer.getNumSamples() * JUCE_LIVE_CONSTANT(80.5f) - 1000) + 1000;
+
+            grainSize *= 10;
+
+            juce::int64 randomFilePos = juce::Random::getSystemRandom()
                 .nextInt(fileBuff->getBuffer().getNumSamples() - grainSize);
 
-            Grain* g;
-            // gestiona los granos que sonaban de antes
-            if (playingGrain.empty())
+            juce::int64 size = juce::jmin<juce::int64>(numSamples,
+                grainSize);
+            juce::int64 randomStartPos = juce::Random::getSystemRandom()
+                .nextInt(size);
+
+            // TODO: que la densidad funcione con floats en vez de con enteros
+            while (playingGrain.size() < JUCE_LIVE_CONSTANT(2))
             {
-                g = new Grain(fileBuff->getBuffer(), randomPos, grainSize);
-                playingGrain.push_back(g);
-            }
-            else g = playingGrain.front();
-            
-            //metelos en el buffer
-            juce::int64 end = juce::jmin<juce::int64>(numSamples, g->getRemainingSamples());
-            for (int i = 0; i < buffer.getNumChannels(); i++)
-            {
-                buffer.copyFrom(i, 0, g->getBuffer(), i, g->getStartPos(), end);
+                // TODO: Que sea una pool
+                playingGrain.push_back(new Grain(fileBuff->getBuffer(), randomFilePos, randomStartPos, grainSize));
             }
 
-            if (g->advanceGrainStartPos(end))
+            std::list<Grain*>::iterator it = playingGrain.begin();
+            while (it != playingGrain.end())
             {
-                delete g;
-                playingGrain.clear();
-            }
+                //metelos en el buffer
+                juce::int64 samples = juce::jmin<juce::int64>(numSamples,
+                    (*it)->getRemainingSamples());
+                juce::int64 startingPos = (*it)->getFirstSample();
+                for (int i = 0; i < buffer.getNumChannels(); i++)
+                {
+                    buffer.addFrom(i, startingPos, (*it)->getBuffer(), i, (*it)->getCurrentPos(), samples - startingPos);
+                }
 
-            //DBG("============");
-            //for (int i = 0; i < buffer.getNumSamples(); i++)
-            //{
-            //    DBG(buffer.getSample(0, i));
-            //}
+                if ((*it)->advanceGrainStartPos(samples))
+                {
+                    delete (*it);
+                    playingGrain.erase(it++);
+                }
+                else ++it;
+            }
         }
 
-        //normaliza el resultado
-
+        //normalizamos el resultado
+        juce::Range<float> minMax = buffer.findMinMax(0, 0, buffer.getNumSamples());
+        // solo hazlo si el canal lo necesita
+        if (minMax.getStart() < -1.f || minMax.getEnd() > 1.f)
+        {
+            juce::Range<float> fileMinMax = fileBuff->getMinMaxValuesLeftChannel();
+            for (int i = 0; i < numSamples; i++) {
+                int scaled = scaleBetween(buffer.getSample(0, i),
+                    fileMinMax.getStart(), fileMinMax.getEnd(),
+                    minMax.getStart(), minMax.getEnd());
+            }
+        }
+        minMax = buffer.findMinMax(1, 0, buffer.getNumSamples());
+        if (minMax.getStart() < -1.f || minMax.getEnd() > 1.f)
+        {
+            juce::Range<float> fileMinMax = fileBuff->getMinMaxValuesRightChannel();
+            for (int i = 0; i < numSamples; i++) {
+                int scaled = scaleBetween(buffer.getSample(1, i),
+                    fileMinMax.getStart(), fileMinMax.getEnd(),
+                    minMax.getStart(), minMax.getEnd());
+            }
+        }
         samplerPos += numSamples;
     }
 
@@ -257,6 +303,10 @@ public:
     }
 
 private:
+    float scaleBetween(float unscaledNum, float minAllowed, float maxAllowed, float min, float max) {
+        return (maxAllowed - minAllowed) * (unscaledNum - min) / (max - min) + minAllowed;
+    }
+
     //GranularSamplerAudioProcessor* audioProcessor;
     FileBufferPlayer* fileBuff = nullptr;
     
