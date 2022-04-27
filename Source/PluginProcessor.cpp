@@ -19,7 +19,7 @@ GranularSamplerAudioProcessor::GranularSamplerAudioProcessor()
                       #endif
                        .withOutput ("Output", juce::AudioChannelSet::stereo(), true)
                      #endif
-                       ), buffPlay(this)
+                       ), buffPlay(this), granularSampler(this)
 #endif
 {
     formatManager.registerBasicFormats();
@@ -213,7 +213,7 @@ void GranularSamplerAudioProcessor::processBlock (juce::AudioBuffer<float>& buff
 
     buffPlay.copyNextBlockFromBufferFileTo(buffer);
 
-    buffer.clear();
+    //buffer.clear();
 
     granularSampler.getNextAudioBlock(buffer);
 
@@ -299,7 +299,7 @@ bool GranularSamplerAudioProcessor::createReaderFor(juce::File f)
     return false;
 }
 
-void GranularSamplerAudioProcessor::changeState(const TransportState newState)
+void GranularSamplerAudioProcessor::changePlayerState(const TransportState newState)
 {
     // ZOMBIE
     //if (transpState != newState)
@@ -307,7 +307,7 @@ void GranularSamplerAudioProcessor::changeState(const TransportState newState)
         //transpState = newState;
 
         buffPlay.setState(newState);
-        granularSampler.setState(newState);
+        //granularSampler.setState(newState);
 
         //switch (transpState)
         //{
@@ -339,16 +339,16 @@ void GranularSamplerAudioProcessor::updatePlayerState(const TransportState newSt
     // ZOMBIE
     //transpState = newState;
     if (getActiveEditor() != nullptr)
-        static_cast<GranularSamplerAudioProcessorEditor*>(getActiveEditor())->updateState(newState);
+        static_cast<GranularSamplerAudioProcessorEditor*>(getActiveEditor())->updatePlayerState(newState);
 }
 
 void GranularSamplerAudioProcessor::updateSamplerState(const TransportState newState)
 {
-    //if (getActiveEditor() != nullptr)
-        //static_cast<GranularSamplerAudioProcessorEditor*>(getActiveEditor())->updateState(newState);
+    if (getActiveEditor() != nullptr)
+        static_cast<GranularSamplerAudioProcessorEditor*>(getActiveEditor())->updateSamplerState(newState);
 }
 
-TransportState GranularSamplerAudioProcessor::getTransportState()
+TransportState GranularSamplerAudioProcessor::getPlayerTransportState()
 {
     return buffPlay.getState();
 }
@@ -363,6 +363,18 @@ void GranularSamplerAudioProcessor::changeListenerCallback(juce::ChangeBroadcast
     //    else
     //        changeState(Stopped);
     //}
+}
+
+void GranularSamplerAudioProcessor::changeSamplerState(const TransportState newState)
+{
+    //buffPlay.setState(newState);
+    granularSampler.setState(newState);
+    updateSamplerState(newState);
+}
+
+TransportState GranularSamplerAudioProcessor::getSamplerTransportState()
+{
+    return granularSampler.getState();
 }
 
 void GranularSamplerAudioProcessor::updatePeakFilter(const ChainSettings& chainSettings)

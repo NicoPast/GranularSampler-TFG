@@ -41,23 +41,39 @@ private:
 
     //==============================================================================
 
-#pragma region SamplerPlayer    
+#pragma region Player    
 public:
-    void updateState(TransportState state);
+    void updatePlayerState(TransportState state);
 
 private:
-    TransportState prevoiusState;
-    juce::TextButton openFileButton, playButton, stopButton;
+    TransportState prevoiusPlayerState;
+    juce::TextButton openFileButton, playPlayerButton, stopPlayerButton;
 
     std::unique_ptr<juce::FileChooser> chooser;
 
     void openButtonClicked();
 
-    void playButtonClicked();
+    void playPlayerButtonClicked();
 
-    void stopButtonClicked();
+    void stopPlayerButtonClicked();
 
-#pragma endregion SamplerPlayer
+#pragma endregion Player
+
+    //==============================================================================
+
+#pragma region GranularSampler    
+public:
+    void updateSamplerState(TransportState state);
+
+private:
+    TransportState prevoiusSamplerState;
+    juce::TextButton playSamplerButton, stopSamplerButton;
+
+    void playSamplerButtonClicked();
+
+    void stopSamplerButtonClicked();
+
+#pragma endregion GranularSampler
 
     //==============================================================================
 

@@ -22,6 +22,12 @@
       <FILE id="lgPaPw" name="EQEditor.h" compile="0" resource="0" file="Source/EQEditor.h"/>
       <FILE id="l9BZMl" name="EQProcessor.cpp" compile="1" resource="0" file="Source/EQProcessor.cpp"/>
       <FILE id="dno1Pq" name="EQProcessor.h" compile="0" resource="0" file="Source/EQProcessor.h"/>
+      <FILE id="wb0ifh" name="Grain.cpp" compile="1" resource="0" file="Source/Grain.cpp"/>
+      <FILE id="QZtd2U" name="GranularSampler.cpp" compile="1" resource="0"
+            file="Source/GranularSampler.cpp"/>
+      <FILE id="vVkfBa" name="GranularSampler.h" compile="0" resource="0"
+            file="Source/GranularSampler.h"/>
+      <FILE id="mFMyMN" name="Grain.h" compile="0" resource="0" file="Source/Grain.h"/>
       <FILE id="ILAEbc" name="PluginProcessor.cpp" compile="1" resource="0"
             file="Source/PluginProcessor.cpp"/>
       <FILE id="esRLyc" name="PluginProcessor.h" compile="0" resource="0"

@@ -67,15 +67,25 @@ GranularSamplerAudioProcessorEditor::GranularSamplerAudioProcessorEditor (Granul
     openFileButton.setLookAndFeel(&lnf);
     openFileButton.setButtonText("Click to OpenFile");
 
-    playButton.setLookAndFeel(&lnf);
-    playButton.setButtonText("Click to Play");
-    playButton.setEnabled(false);
-    playButton.setColour(juce::TextButton::buttonColourId, juce::Colours::green);
+    playPlayerButton.setLookAndFeel(&lnf);
+    playPlayerButton.setButtonText("Click to Play File");
+    playPlayerButton.setEnabled(false);
+    playPlayerButton.setColour(juce::TextButton::buttonColourId, juce::Colours::green);
 
-    stopButton.setLookAndFeel(&lnf);
-    stopButton.setButtonText("Click to Stop");
-    stopButton.setEnabled(false);
-    stopButton.setColour(juce::TextButton::buttonColourId, juce::Colours::red);
+    stopPlayerButton.setLookAndFeel(&lnf);
+    stopPlayerButton.setButtonText("Click to Stop File");
+    stopPlayerButton.setEnabled(false);
+    stopPlayerButton.setColour(juce::TextButton::buttonColourId, juce::Colours::red);
+
+    playSamplerButton.setLookAndFeel(&lnf);
+    playSamplerButton.setButtonText("Click to Play Sampler");
+    playSamplerButton.setEnabled(false);
+    playSamplerButton.setColour(juce::TextButton::buttonColourId, juce::Colours::green);
+
+    stopSamplerButton.setLookAndFeel(&lnf);
+    stopSamplerButton.setButtonText("Click to Stop Sampler");
+    stopSamplerButton.setEnabled(false);
+    stopSamplerButton.setColour(juce::TextButton::buttonColourId, juce::Colours::red);
 
     auto safePtr = juce::Component::SafePointer<GranularSamplerAudioProcessorEditor>(this);
 
@@ -86,20 +96,35 @@ GranularSamplerAudioProcessorEditor::GranularSamplerAudioProcessorEditor (Granul
             comp->openButtonClicked();
         }
     };
-    playButton.onClick = [safePtr]() {
+
+    playPlayerButton.onClick = [safePtr]() {
         if (auto* comp = safePtr.getComponent())
         {
-            comp->playButtonClicked();
+            comp->playPlayerButtonClicked();
         }
     };
-    stopButton.onClick = [safePtr]() {
+    stopPlayerButton.onClick = [safePtr]() {
         if (auto* comp = safePtr.getComponent())
         {
-            comp->stopButtonClicked();
+            comp->stopPlayerButtonClicked();
         }
     };
 
-    prevoiusState = audioProcessor.getTransportState();
+    playSamplerButton.onClick = [safePtr]() {
+        if (auto* comp = safePtr.getComponent())
+        {
+            comp->playSamplerButtonClicked();
+        }
+    };
+    stopSamplerButton.onClick = [safePtr]() {
+        if (auto* comp = safePtr.getComponent())
+        {
+            comp->stopSamplerButtonClicked();
+        }
+    };
+
+    prevoiusPlayerState = audioProcessor.getPlayerTransportState();
+    prevoiusSamplerState = audioProcessor.getSamplerTransportState();
 
     eqSetUp(safePtr);
 
@@ -109,8 +134,10 @@ GranularSamplerAudioProcessorEditor::GranularSamplerAudioProcessorEditor (Granul
 GranularSamplerAudioProcessorEditor::~GranularSamplerAudioProcessorEditor()
 {
     openFileButton.setLookAndFeel(nullptr);
-    playButton.setLookAndFeel(nullptr);
-    stopButton.setLookAndFeel(nullptr);
+    playPlayerButton.setLookAndFeel(nullptr);
+    stopPlayerButton.setLookAndFeel(nullptr);
+    playSamplerButton.setLookAndFeel(nullptr);
+    stopSamplerButton.setLookAndFeel(nullptr);
 
     eqEnabledButton.setLookAndFeel(nullptr);
     peakBypassedButton.setLookAndFeel(nullptr);
@@ -145,40 +172,46 @@ void GranularSamplerAudioProcessorEditor::resized()
     eqResized(boundsEQ);
     //eq.resized(boundsEQ);
 
-    auto buttonsArea = bounds.removeFromTop(bounds.getHeight() / 8.f);
+    auto fileButtonArea = bounds.removeFromTop(bounds.getHeight() / 8.f);
 
-    auto playButtonArea = buttonsArea.removeFromRight(buttonsArea.getWidth() * 2.f / 3.f);
+    auto buttonsArea = fileButtonArea.removeFromRight(fileButtonArea.getWidth() * 2.f / 3.f);
 
-    auto stopButtonArea = playButtonArea.removeFromRight(playButtonArea.getWidth() / 2.f);
+    openFileButton.setBounds(fileButtonArea);
 
-    openFileButton.setBounds(buttonsArea);
+    auto playerButtonsArea = buttonsArea.removeFromTop(buttonsArea.getHeight() / 2.f);
 
-    playButton.setBounds(playButtonArea);
-    
-    stopButton.setBounds(stopButtonArea);
+    auto stopPlayerButtonArea = playerButtonsArea.removeFromRight(playerButtonsArea.getWidth() / 2.f);
+
+    playPlayerButton.setBounds(playerButtonsArea);
+    stopPlayerButton.setBounds(stopPlayerButtonArea);
+
+    auto stopSamplerButtonArea = buttonsArea.removeFromRight(buttonsArea.getWidth() / 2.f);
+
+    playSamplerButton.setBounds(buttonsArea);
+    stopSamplerButton.setBounds(stopSamplerButtonArea);
 }
 
-void GranularSamplerAudioProcessorEditor::updateState(TransportState state)
+void GranularSamplerAudioProcessorEditor::updatePlayerState(TransportState state)
 {
-    if (prevoiusState != state)
+    if (prevoiusPlayerState != state)
     {
-        prevoiusState = state;
+        prevoiusPlayerState = state;
 
         // locks the thread so it doesn't crash when is called from the processor
         const juce::MessageManagerLock mmLock;
         switch (state)
         {
         case Stopped:                           // [3]
-            stopButton.setEnabled(false);
-            playButton.setEnabled(true);
+            stopPlayerButton.setEnabled(false);
+            playPlayerButton.setEnabled(true);
             break;
 
         case Starting:                          // [4]
-            playButton.setEnabled(false);
+            playPlayerButton.setEnabled(false);
             break;
 
         case Playing:                           // [5]
-            stopButton.setEnabled(true);
+            stopPlayerButton.setEnabled(true);
             break;
 
         case Stopping:                          // [6]
@@ -199,8 +232,10 @@ void GranularSamplerAudioProcessorEditor::openButtonClicked()
     auto chooserFlags = juce::FileBrowserComponent::openMode
         | juce::FileBrowserComponent::canSelectFiles;
 
-    playButton.setEnabled(false);
-    stopButton.setEnabled(false);
+    playPlayerButton.setEnabled(false);
+    stopPlayerButton.setEnabled(false);
+    playSamplerButton.setEnabled(false);
+    stopSamplerButton.setEnabled(false);
 
     chooser->launchAsync(chooserFlags, [this](const juce::FileChooser& fc)           // [8]
         {
@@ -210,22 +245,70 @@ void GranularSamplerAudioProcessorEditor::openButtonClicked()
             {
                 if (audioProcessor.createReaderFor(file))
                 {
-                    playButton.setEnabled(true);                                                      // [13]
+                    playPlayerButton.setEnabled(true);                                                      // [13]
+                    playSamplerButton.setEnabled(true);
                 }
             }
         });
 }
 
-void GranularSamplerAudioProcessorEditor::playButtonClicked()
+void GranularSamplerAudioProcessorEditor::playPlayerButtonClicked()
 {
-    playButton.setEnabled(false);
-    audioProcessor.changeState(Starting);
+    playPlayerButton.setEnabled(false);
+    audioProcessor.changePlayerState(Starting);
+    audioProcessor.changeSamplerState(Stopping);
 }
 
-void GranularSamplerAudioProcessorEditor::stopButtonClicked()
+void GranularSamplerAudioProcessorEditor::stopPlayerButtonClicked()
 {
-    stopButton.setEnabled(false);
-    audioProcessor.changeState(Stopping);
+    stopPlayerButton.setEnabled(false);
+    audioProcessor.changePlayerState(Stopping);
+}
+
+void GranularSamplerAudioProcessorEditor::updateSamplerState(TransportState state)
+{
+    if (prevoiusSamplerState != state)
+    {
+        prevoiusSamplerState = state;
+
+        // locks the thread so it doesn't crash when is called from the processor
+        const juce::MessageManagerLock mmLock;
+        switch (state)
+        {
+        case Stopped:                           // [3]
+            stopSamplerButton.setEnabled(false);
+            playSamplerButton.setEnabled(true);
+            break;
+
+        case Starting:                          // [4]
+            playSamplerButton.setEnabled(false);
+            break;
+
+        case Playing:                           // [5]
+            stopSamplerButton.setEnabled(true);
+            break;
+
+        case Stopping:                          // [6]
+            break;
+
+        default:
+            DBG("INVALIS STATE RECIEVED");
+            break;
+        }
+    }
+}
+
+void GranularSamplerAudioProcessorEditor::playSamplerButtonClicked()
+{
+    playSamplerButton.setEnabled(false);
+    audioProcessor.changeSamplerState(Starting);
+    audioProcessor.changePlayerState(Stopping);
+}
+
+void GranularSamplerAudioProcessorEditor::stopSamplerButtonClicked()
+{
+    stopSamplerButton.setEnabled(false);
+    audioProcessor.changeSamplerState(Stopping);
 }
 
 void GranularSamplerAudioProcessorEditor::eqResized(juce::Rectangle<int> bounds)
@@ -358,8 +441,10 @@ std::vector<juce::Component*> GranularSamplerAudioProcessorEditor::getComps()
     return 
     {
         &openFileButton,
-        &playButton,
-        &stopButton,
+        &playPlayerButton,
+        &stopPlayerButton,
+        &playSamplerButton,
+        &stopSamplerButton,
 
         &peakFreqSlider,
         &peakGainSlider,
