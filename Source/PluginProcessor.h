@@ -16,15 +16,24 @@
 class Grain
 {
 public:
-    Grain() {}
+    Grain() : grainBuffer(2,0), startingSample(0), adsr(), currentPos(0), endPos(0) 
+    {
+        grainBuffer.clear();
+    }
     Grain(juce::AudioBuffer<float> buff) : grainBuffer(buff)
     {
         applyADSR();
     }
     Grain(juce::AudioBuffer<float> buff, juce::int64 originPos, juce::int64 staPos, juce::int64 numSamples)
     {
+        resetGrain(buff, originPos, staPos, numSamples);
+    }
+    ~Grain() {}
+
+    void resetGrain(juce::AudioBuffer<float> buff, juce::int64 originPos, juce::int64 staPos, juce::int64 numSamples)
+    {
         grainBuffer.setSize(buff.getNumChannels(), numSamples);
-        
+
         for (int i = 0; i < buff.getNumChannels(); i++)
         {
             grainBuffer.copyFrom(i, 0, buff, 0, originPos, numSamples);
@@ -37,9 +46,8 @@ public:
 
         juce::int64 total = endPos - staPos;
 
-        setADSR(44100.0, total /4, total / 4, total / 4, total / 4);
+        setADSR(44100.0, total / 4, total / 4, total / 4, total / 4);
     }
-    ~Grain() {}
 
     void setADSR(double sampleRate, float attackSecs, float decaySecs,
         float sustSecs, float relSecs)
@@ -111,6 +119,16 @@ public:
     {
         return endPos - currentPos;
     }
+
+    void clear()
+    {
+        grainBuffer.clear();
+        startingSample = 0;
+
+        startPos = 0;
+        currentPos = 0;
+        endPos = 0;
+    }
 private:
     void applyADSR()
     {
@@ -131,8 +149,8 @@ private:
     juce::int64 currentPos;
     juce::int64 endPos;
     // TODO: ????? lo hago?
-    float paning; // -1.f left, 0 centered, 1.f right
-    float pitch; // altered pitch of the Grain
+    float paning = 0; // -1.f left, 0 centered, 1.f right
+    float pitch = 0; // altered pitch of the Grain
 };
 
 class GranularSampler
@@ -149,13 +167,25 @@ class GranularSampler
 // si es menos de 100, lo utilizo como un minimo de porcentaje que debo ocupar
 
 public:
-    GranularSampler() {}
+    GranularSampler()
+    {
+        for (int i = 0; i < poolSize; i++)
+        {
+            grainPool.push_back(new Grain());
+        }
+        //grainPool = std::list<Grain>(poolSize);
+    }
     ~GranularSampler() 
     {
         while (!playingGrain.empty())
         {
             delete playingGrain.front();
             playingGrain.pop_front();
+        }
+        while (!grainPool.empty())
+        {
+            delete grainPool.front();
+            grainPool.pop_front();
         }
     }
 
@@ -182,28 +212,33 @@ public:
 
         //dame nuevos granos en funcion de la densidad
 
-
         if (fileBuff != nullptr)
         {
-            juce::int64 grainSize = juce::Random::getSystemRandom().nextFloat()
-                * (buffer.getNumSamples() * JUCE_LIVE_CONSTANT(80.5f) - 1000) + 1000;
-
-            grainSize *= 10;
-
-            juce::int64 randomFilePos = juce::Random::getSystemRandom()
-                .nextInt(fileBuff->getBuffer().getNumSamples() - grainSize);
-
-            juce::int64 size = juce::jmin<juce::int64>(numSamples,
-                grainSize);
-            juce::int64 randomStartPos = juce::Random::getSystemRandom()
-                .nextInt(size);
+            float gDens = JUCE_LIVE_CONSTANT(20.f);
 
             // TODO: que la densidad funcione con floats en vez de con enteros
-            while (playingGrain.size() < JUCE_LIVE_CONSTANT(2))
+            while (playingGrain.size() < gDens && !grainPool.empty())
             {
-                // TODO: Que sea una pool
-                playingGrain.push_back(new Grain(fileBuff->getBuffer(), randomFilePos, randomStartPos, grainSize));
+                juce::int64 grainSize = juce::Random::getSystemRandom().nextFloat()
+                    * (buffer.getNumSamples() * JUCE_LIVE_CONSTANT(80.5f) - 1000) + 1000;
+
+                grainSize *= 10;
+
+                juce::int64 randomFilePos = juce::Random::getSystemRandom()
+                    .nextInt(fileBuff->getBuffer().getNumSamples() - grainSize);
+
+                juce::int64 size = juce::jmin<juce::int64>(numSamples,
+                    grainSize);
+                juce::int64 randomStartPos = juce::Random::getSystemRandom()
+                    .nextInt(size);
+                Grain* g = grainPool.front();
+                grainPool.pop_front();
+                g->resetGrain(fileBuff->getBuffer(), randomFilePos, randomStartPos, grainSize);
+                playingGrain.push_back(g);
+                //playingGrain.push_back(new Grain(fileBuff->getBuffer(), randomFilePos, randomStartPos, grainSize));
             }
+
+            int played = 0;
 
             std::list<Grain*>::iterator it = playingGrain.begin();
             while (it != playingGrain.end())
@@ -219,36 +254,54 @@ public:
 
                 if ((*it)->advanceGrainStartPos(samples))
                 {
-                    delete (*it);
+                    grainPool.push_back(*it);
+                    (*it)->clear();
+                    //delete (*it);
                     playingGrain.erase(it++);
                 }
                 else ++it;
-            }
-        }
 
-        //normalizamos el resultado
-        juce::Range<float> minMax = buffer.findMinMax(0, 0, buffer.getNumSamples());
-        // solo hazlo si el canal lo necesita
-        if (minMax.getStart() < -1.f || minMax.getEnd() > 1.f)
-        {
-            juce::Range<float> fileMinMax = fileBuff->getMinMaxValuesLeftChannel();
-            for (int i = 0; i < numSamples; i++) {
-                int scaled = scaleBetween(buffer.getSample(0, i),
-                    fileMinMax.getStart(), fileMinMax.getEnd(),
-                    minMax.getStart(), minMax.getEnd());
+                played++;
             }
+
+            // TODO: normalizado funciona asi asa
+            // funciona asi porque esta leyendo el inmediato solo, y deberia en vez de normalizarlo
+            // bajar la ganancia a todos los buffers en vez de normalizar
+            //normalizamos el resultado
+            //juce::Range<float> minMax = buffer.findMinMax(0, 0, buffer.getNumSamples());
+            ////solo hazlo si el canal lo necesita
+            //if (minMax.getStart() < -1.f || minMax.getEnd() > 1.f)
+            //{
+            //    juce::Range<float> fileMinMax = fileBuff->getMinMaxValuesLeftChannel();
+            //    for (int i = 0; i < numSamples; i++) {
+            //        float scaled = scaleBetween(buffer.getSample(0, i),
+            //            fileMinMax.getStart(), fileMinMax.getEnd(),
+            //            minMax.getStart(), minMax.getEnd());
+            //        buffer.setSample(0, i, scaled);
+            //    }
+            //    //buffer.applyGain(0, 0, buffer.getNumSamples(), 1.f / played);
+            //}
+            //minMax = buffer.findMinMax(1, 0, buffer.getNumSamples());
+            //if (minMax.getStart() < -1.f || minMax.getEnd() > 1.f)
+            //{
+            //    juce::Range<float> fileMinMax = fileBuff->getMinMaxValuesRightChannel();
+            //    for (int i = 0; i < numSamples; i++) {
+            //        float scaled = scaleBetween(buffer.getSample(1, i),
+            //            fileMinMax.getStart(), fileMinMax.getEnd(),
+            //            minMax.getStart(), minMax.getEnd());
+            //        buffer.setSample(1, i, scaled);
+            //    }
+            //}
+
+            // TODO: be more clever than this
+            float strength = 2.f;
+            
+            buffer.applyGain(strength * 1.f / played);
+
+            //DBG(buffer.findMinMax(0, 0, buffer.getNumSamples()).getEnd());
+
+            samplerPos += numSamples;
         }
-        minMax = buffer.findMinMax(1, 0, buffer.getNumSamples());
-        if (minMax.getStart() < -1.f || minMax.getEnd() > 1.f)
-        {
-            juce::Range<float> fileMinMax = fileBuff->getMinMaxValuesRightChannel();
-            for (int i = 0; i < numSamples; i++) {
-                int scaled = scaleBetween(buffer.getSample(1, i),
-                    fileMinMax.getStart(), fileMinMax.getEnd(),
-                    minMax.getStart(), minMax.getEnd());
-            }
-        }
-        samplerPos += numSamples;
     }
 
     void updateADSRPercs(float att, float dec, float sus, float rel)
@@ -266,6 +319,12 @@ public:
             {
             case Stopped:                           // [3]
                 samplerPos = 0;
+                while (!playingGrain.empty())
+                {
+                    grainPool.push_back(playingGrain.front());
+                    playingGrain.front()->clear();
+                    playingGrain.pop_front();
+                }
                 break;
 
             case Starting:                          // [4]
@@ -332,6 +391,9 @@ private:
 
     // unaltered grains which will still be playing
     std::list<Grain*> playingGrain;
+
+    std::list<Grain*> grainPool;
+    int poolSize = 100;
 };
 
 //==============================================================================
