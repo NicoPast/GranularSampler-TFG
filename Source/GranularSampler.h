@@ -15,6 +15,18 @@
 #include "CommonProcessor.h"
 #include "FileBufferPlayer.h"
 
+struct GranularSamplerSettings
+{
+    float maximumSecondsDuration{ 0 },
+        grainDensity{ 0 }, grainMaxLength{ 0 }, grainMinLength{ 0 },
+        startingPosMin{ 0 }, startingPosMax{ 0 },
+        attackPerc{ 0 }, decPerc{ 0 }, sustPerc{ 0 }, relPerc{ 0 };
+
+    bool endless{ false };
+};
+
+GranularSamplerSettings getGranularSamplerSettings(juce::AudioProcessorValueTreeState& apvts);
+
 class GranularSamplerAudioProcessor;
 
 class GranularSampler
@@ -38,7 +50,7 @@ public:
 
     void updateADSRPercs(float att, float dec, float sus, float rel);
 
-    void setState(TransportState newState);
+    void changeState(TransportState newState);
 
     TransportState getState();
 
@@ -59,15 +71,16 @@ private:
     juce::int64 samplerPos = 0;
     juce::int64 totalNumSamples;
 
-    float grainDensity;
-    float grainDuration;
+    //float grainDensity;
+    //float grainDuration;
 
     float attackPerc;
     float decayPerc;
     float sustPerc;
     float relPerc;
 
-    float startingPositionRandom;
+    float startingPositionRandomMin;
+    float startingPositionRandomMax;
     float densityRandom;
     float panRandom;
     float pitchRandom;

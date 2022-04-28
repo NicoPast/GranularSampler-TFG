@@ -39,6 +39,10 @@ private:
     // access the processor object that created it.
     GranularSamplerAudioProcessor& audioProcessor;
 
+    using APVTS = juce::AudioProcessorValueTreeState;
+    using SliderAttachment = APVTS::SliderAttachment;
+    using ButtonAttachment = APVTS::ButtonAttachment;
+
     //==============================================================================
 
 #pragma region Player    
@@ -69,6 +73,14 @@ private:
     TransportState prevoiusSamplerState;
     juce::TextButton playSamplerButton, stopSamplerButton;
 
+    RotarySliderWithLabels grainDensitySlider, 
+        grainMinLengthSlider, grainMaxLengthSlider,
+        grainMinStartPosSlider, grainMaxStartPosSlider;
+
+    SliderAttachment grainDensitySliderAttachment,
+        grainMinLenghtSliderAttachment, grainMaxLenghtSliderAttachment,
+        grainMinStartPosSliderAttachment, grainMaxStartPosSliderAttachment;
+
     void playSamplerButtonClicked();
 
     void stopSamplerButtonClicked();
@@ -90,10 +102,7 @@ private:
         lowCutSlopeSlider,
         highCutSlopeSlider;
 
-    using APVTS = juce::AudioProcessorValueTreeState;
-    using Attachment = APVTS::SliderAttachment;
-
-    Attachment peakFreqSliderAttachment,
+    SliderAttachment peakFreqSliderAttachment,
         peakGainSliderAttachment,
         peakQualitySliderAttachment,
         lowCutFreqSliderAttachment,
@@ -105,8 +114,6 @@ private:
 
     PowerButton eqEnabledButton, lowCutBypassedButton, peakBypassedButton, highCutBypassedButton;
     AnalyzerButton analyzerEnabledButton;
-
-    using ButtonAttachment = APVTS::ButtonAttachment;
 
     ButtonAttachment eqEnabledButtonAttachment,
         lowCutBypassedButtonAttachment,

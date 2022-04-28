@@ -52,6 +52,30 @@ private:
     juce::String suffix;
 };
 
+// TODO: mejorar los limites temporales con esto
+struct TwoValueHorizontalSlider : juce::Slider
+{
+    TwoValueHorizontalSlider(juce::RangedAudioParameter& rap, const juce::String& unitSuffix) :
+        juce::Slider(juce::Slider::SliderStyle::TwoValueHorizontal, 
+            juce::Slider::TextEntryBoxPosition::NoTextBox),
+        param(&rap),
+        suffix(unitSuffix)
+    {
+        setLookAndFeel(&lnf);
+    }
+
+    ~TwoValueHorizontalSlider()
+    {
+        setLookAndFeel(nullptr);
+    }
+
+private:
+    LookAndFeel lnf;
+
+    juce::RangedAudioParameter* param;
+    juce::String suffix;
+};
+
 struct PowerButton : juce::ToggleButton { };
 struct AnalyzerButton : juce::ToggleButton
 {

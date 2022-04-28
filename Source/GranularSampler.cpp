@@ -39,38 +39,49 @@ void GranularSampler::getNextAudioBlock(juce::AudioBuffer<float>& buffer)
     // usar el sistema de estado del player aqui tambien
     if (samplerState == Stopping)
     {
-        setState(Stopped);
+        changeState(Stopped);
         return;
     }
     if (!samplerPlaying)
         return;
 
     if (samplerState == Starting)
-        setState(Playing);
+        changeState(Playing);
+
+    GranularSamplerSettings settings = getGranularSamplerSettings(audioProcessor->apvts);
 
     int numSamples = buffer.getNumSamples();
     if (totalNumSamples < numSamples + samplerPos)
     {
-        setState(Stopping);
+        changeState(Stopping);
         numSamples = totalNumSamples - samplerPos;
     }
 
     //dame nuevos granos en funcion de la densidad
-
     if (fileBuff != nullptr)
     {
-        float gDens = JUCE_LIVE_CONSTANT(20.f);
-
         // TODO: que la densidad funcione con floats en vez de con enteros
-        while (playingGrain.size() < gDens && !grainPool.empty())
+        while (playingGrain.size() < settings.grainDensity && !grainPool.empty())
         {
-            juce::int64 grainSize = juce::Random::getSystemRandom().nextFloat()
-                * (buffer.getNumSamples() * JUCE_LIVE_CONSTANT(80.5f) - 1000) + 1000;
+            float gMaxLeng = settings.grainMaxLength;
+            float gMinLeng = settings.grainMinLength;
+            
+            //juce::int64 grainSize = juce::Random::getSystemRandom().nextFloat()
+            //    * (JUCE_LIVE_CONSTANT(20.5f) * audioProcessor->getSampleRate() - numSamples) + numSamples;
 
-            grainSize *= 10;
+            //grainSize in range of [gMinLeng, gMaxLeng)
+            juce::int64 grainSize = (juce::Random::getSystemRandom().nextFloat() 
+                * (gMaxLeng - gMinLeng) + gMinLeng) 
+                * audioProcessor->getSampleRate() + buffer.getNumSamples();
 
-            juce::int64 randomFilePos = juce::Random::getSystemRandom()
-                .nextInt(fileBuff->getBuffer().getNumSamples() - grainSize);
+            // avoids a grain bigger than the original sample
+            if (grainSize > fileBuff->getBuffer().getNumSamples())
+                grainSize = fileBuff->getBuffer().getNumSamples();
+
+            juce::int64 randomFilePos = (juce::Random::getSystemRandom().nextFloat() 
+                * (settings.startingPosMax - settings.startingPosMin) + settings.startingPosMin)
+                / 100.f
+                * (fileBuff->getBuffer().getNumSamples() - grainSize);
 
             juce::int64 size = juce::jmin<juce::int64>(numSamples,
                 grainSize);
@@ -99,9 +110,9 @@ void GranularSampler::getNextAudioBlock(juce::AudioBuffer<float>& buffer)
 
             if ((*it)->advanceGrainStartPos(samples))
             {
+                //delete (*it);
                 grainPool.push_back(*it);
                 (*it)->clear();
-                //delete (*it);
                 playingGrain.erase(it++);
             }
             else ++it;
@@ -140,9 +151,11 @@ void GranularSampler::getNextAudioBlock(juce::AudioBuffer<float>& buffer)
 
         // TODO: be more clever than this
         // quizas debería implementar un compresor?
-        float strength = 2.f;
+        float strength = 1.f;
 
         buffer.applyGain(strength * 1.f / played);
+
+        //DBG(played);
 
         //DBG(buffer.findMinMax(0, 0, buffer.getNumSamples()).getEnd());
 
@@ -155,7 +168,7 @@ void GranularSampler::updateADSRPercs(float att, float dec, float sus, float rel
 
 }
 
-void GranularSampler::setState(TransportState newState)
+void GranularSampler::changeState(TransportState newState)
 {
     if (samplerState != newState)
     {
@@ -184,7 +197,7 @@ void GranularSampler::setState(TransportState newState)
             samplerPlaying = false;
             break;
         default:
-            DBG("INVALIS STATE RECIEVED");
+            DBG("INVALID STATE RECIEVED");
             break;
         }
         audioProcessor->updateSamplerState(samplerState);
@@ -209,4 +222,21 @@ void GranularSampler::setFileBuffer(FileBufferPlayer* fBuff)
 
 float GranularSampler::scaleBetween(float unscaledNum, float minAllowed, float maxAllowed, float min, float max) {
     return (maxAllowed - minAllowed) * (unscaledNum - min) / (max - min) + minAllowed;
+}
+
+GranularSamplerSettings getGranularSamplerSettings(juce::AudioProcessorValueTreeState& apvts)
+{
+    GranularSamplerSettings settings;
+    
+    //maximumSecondsDuration
+    settings.grainDensity = apvts.getRawParameterValue("Grain Density")->load() / 100.f;
+    settings.grainMinLength = apvts.getRawParameterValue("Grain Min Length")->load();
+    settings.grainMaxLength = apvts.getRawParameterValue("Grain Max Length")->load();
+    settings.startingPosMin = apvts.getRawParameterValue("Grain Min StartPos")->load();
+    settings.startingPosMax = apvts.getRawParameterValue("Grain Max StartPos")->load();
+    //adsr
+    settings.endless = apvts.getRawParameterValue("Endless")->load() > 0.5f;
+
+
+    return settings;
 }

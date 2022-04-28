@@ -10,9 +10,15 @@
 #include "PluginEditor.h"
 
 //==============================================================================
-GranularSamplerAudioProcessorEditor::GranularSamplerAudioProcessorEditor (GranularSamplerAudioProcessor& p)
-    : AudioProcessorEditor (&p), audioProcessor (p),
+GranularSamplerAudioProcessorEditor::GranularSamplerAudioProcessorEditor(GranularSamplerAudioProcessor& p)
+    : AudioProcessorEditor(&p), audioProcessor(p),
     responseCurveComponent(audioProcessor),
+    grainDensitySlider(*audioProcessor.apvts.getParameter("Grain Density"), "%"),
+    grainMinLengthSlider(*audioProcessor.apvts.getParameter("Grain Min Length"), "sec"),
+    grainMaxLengthSlider(*audioProcessor.apvts.getParameter("Grain Max Length"), "sec"),
+    grainMinStartPosSlider(*audioProcessor.apvts.getParameter("Grain Min StartPos"), "%"),
+    grainMaxStartPosSlider(*audioProcessor.apvts.getParameter("Grain Max StartPos"), "%"),
+
     peakFreqSlider(*audioProcessor.apvts.getParameter("Peak Freq"), "Hz"),
     peakGainSlider(*audioProcessor.apvts.getParameter("Peak Gain"), "dB"),
     peakQualitySlider(*audioProcessor.apvts.getParameter("Peak Quality"), ""),
@@ -21,6 +27,12 @@ GranularSamplerAudioProcessorEditor::GranularSamplerAudioProcessorEditor (Granul
     highCutFreqSlider(*audioProcessor.apvts.getParameter("HighCut Freq"), "Hz"),
     highCutSlopeSlider(*audioProcessor.apvts.getParameter("HighCut Slope"), "db/Oct"),
 
+    grainDensitySliderAttachment(audioProcessor.apvts, "Grain Density", grainDensitySlider),
+    grainMinLenghtSliderAttachment(audioProcessor.apvts, "Grain Min Length", grainMinLengthSlider),
+    grainMaxLenghtSliderAttachment(audioProcessor.apvts, "Grain Max Length", grainMaxLengthSlider),
+    grainMinStartPosSliderAttachment(audioProcessor.apvts, "Grain Min StartPos", grainMinStartPosSlider),
+    grainMaxStartPosSliderAttachment(audioProcessor.apvts, "Grain Max StartPos", grainMaxStartPosSlider),
+    
     peakFreqSliderAttachment(audioProcessor.apvts, "Peak Freq", peakFreqSlider),
     peakGainSliderAttachment(audioProcessor.apvts, "Peak Gain", peakGainSlider),
     peakQualitySliderAttachment(audioProcessor.apvts, "Peak Quality", peakQualitySlider),
@@ -37,6 +49,24 @@ GranularSamplerAudioProcessorEditor::GranularSamplerAudioProcessorEditor (Granul
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
+
+    grainDensitySlider.labels.add({ 0.f, "0.0%"});
+    grainDensitySlider.labels.add({ 1.f, "10.0k%"});
+
+    grainMinLengthSlider.labels.add({ 0.f, "0.01sec" });
+    grainMinLengthSlider.labels.add({ 1.f, "300.0sec" });
+
+    grainMaxLengthSlider.labels.add({ 0.f, "0.01sec" });
+    grainMaxLengthSlider.labels.add({ 1.f, "300.0sec" });
+
+    grainMinStartPosSlider.labels.add({ 0.f, "0.0%" });
+    grainMinStartPosSlider.labels.add({ 1.f, "100.0%" });
+
+    grainMaxStartPosSlider.labels.add({ 0.f, "0.0%" });
+    grainMaxStartPosSlider.labels.add({ 1.f, "100.0%" });
+
+    grainDensitySlider.labels.add({ 0.f, "0.0%" });
+    grainDensitySlider.labels.add({ 1.f, "10.0k%" });
 
     peakFreqSlider.labels.add({ 0.f, "20Hz" });
     peakFreqSlider.labels.add({ 1.f, "20kHz" });
@@ -189,6 +219,21 @@ void GranularSamplerAudioProcessorEditor::resized()
 
     playSamplerButton.setBounds(buttonsArea);
     stopSamplerButton.setBounds(stopSamplerButtonArea);
+
+    auto infoBar = bounds.removeFromTop(25);
+    bounds.removeFromRight(bounds.getWidth() / 2.f);
+    auto densityBoundsSlider = bounds.removeFromTop(bounds.getHeight() / 2.f);
+    auto lengthSliders = bounds.removeFromTop(bounds.getHeight() / 2.f);
+    auto minLengthSlider = lengthSliders.removeFromLeft(lengthSliders.getWidth() / 2.f);
+    
+    grainDensitySlider.setBounds(densityBoundsSlider);
+    grainMinLengthSlider.setBounds(minLengthSlider);
+    grainMaxLengthSlider.setBounds(lengthSliders);
+
+    auto minStartPosSlider = bounds.removeFromLeft(bounds.getWidth() / 2.f);
+
+    grainMinStartPosSlider.setBounds(minStartPosSlider);
+    grainMaxStartPosSlider.setBounds(bounds);
 }
 
 void GranularSamplerAudioProcessorEditor::updatePlayerState(TransportState state)
@@ -445,6 +490,12 @@ std::vector<juce::Component*> GranularSamplerAudioProcessorEditor::getComps()
         &stopPlayerButton,
         &playSamplerButton,
         &stopSamplerButton,
+
+        &grainDensitySlider,
+        &grainMinLengthSlider,
+        &grainMaxLengthSlider,
+        &grainMinStartPosSlider,
+        &grainMaxStartPosSlider,
 
         &peakFreqSlider,
         &peakGainSlider,

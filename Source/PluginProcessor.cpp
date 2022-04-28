@@ -187,6 +187,20 @@ void GranularSamplerAudioProcessor::processBlock (juce::AudioBuffer<float>& buff
 
     updateFilters();
 
+    float minValNorm = apvts.getParameter("Grain Min Length")->getValue();
+    auto maxParam = apvts.getParameter("Grain Max Length");
+    if (maxParam->getValue() < minValNorm)
+    {
+        maxParam->setValueNotifyingHost(minValNorm);
+    }
+
+    minValNorm = apvts.getParameter("Grain Min StartPos")->getValue();
+    maxParam = apvts.getParameter("Grain Max StartPos");
+    if (maxParam->getValue() < minValNorm)
+    {
+        maxParam->setValueNotifyingHost(minValNorm);
+    }
+
     // ======================================================
 
     juce::dsp::AudioBlock<float> block(buffer);
@@ -211,11 +225,11 @@ void GranularSamplerAudioProcessor::processBlock (juce::AudioBuffer<float>& buff
 
     //buffer.clear();
 
-    buffPlay.copyNextBlockFromBufferFileTo(buffer);
+    if(buffPlay.getState() != Stopped)
+        buffPlay.copyNextBlockFromBufferFileTo(buffer);
 
-    //buffer.clear();
-
-    granularSampler.getNextAudioBlock(buffer);
+    if (granularSampler.getState() != Stopped)
+        granularSampler.getNextAudioBlock(buffer);
 
     //buffer.copyFrom(0, 0, *bufferToFill.buffer, 0, bufferToFill.startSample, buffer.getNumSamples());
 
@@ -246,7 +260,6 @@ bool GranularSamplerAudioProcessor::hasEditor() const
 juce::AudioProcessorEditor* GranularSamplerAudioProcessor::createEditor()
 {
     return new GranularSamplerAudioProcessorEditor(*this);
-    //codigo modificado por mi
     // we will miss you, default template :(
     //return new juce::GenericAudioProcessorEditor(*this);
 }
@@ -294,6 +307,7 @@ bool GranularSamplerAudioProcessor::createReaderFor(juce::File f)
         granularSampler.setFileBuffer(&buffPlay);
 
         buffPlay.reset();
+        granularSampler.changeState(Stopped);
         return true;
     }
     return false;
@@ -301,13 +315,12 @@ bool GranularSamplerAudioProcessor::createReaderFor(juce::File f)
 
 void GranularSamplerAudioProcessor::changePlayerState(const TransportState newState)
 {
+    buffPlay.setState(newState);
+    updatePlayerState(newState);
     // ZOMBIE
     //if (transpState != newState)
     //{
         //transpState = newState;
-
-        buffPlay.setState(newState);
-        //granularSampler.setState(newState);
 
         //switch (transpState)
         //{
@@ -329,8 +342,6 @@ void GranularSamplerAudioProcessor::changePlayerState(const TransportState newSt
         //    DBG("INVALIS STATE RECIEVED");
         //    break;
         //}
-
-        updatePlayerState(newState);
     //}
 }
 
@@ -367,8 +378,7 @@ void GranularSamplerAudioProcessor::changeListenerCallback(juce::ChangeBroadcast
 
 void GranularSamplerAudioProcessor::changeSamplerState(const TransportState newState)
 {
-    //buffPlay.setState(newState);
-    granularSampler.setState(newState);
+    granularSampler.changeState(newState);
     updateSamplerState(newState);
 }
 
@@ -436,6 +446,41 @@ juce::AudioProcessorValueTreeState::ParameterLayout
     juce::AudioProcessorValueTreeState::ParameterLayout layout;
 
     // name, parameter name, range of parameter, step, skew value, default Val 
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Grain Density",
+        "Grain Density",
+        juce::NormalisableRange<float>(0.f, 10000.f, .1f, 0.25f),
+        2000.0f));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Grain Min Length",
+        "Grain Min Length",
+        juce::NormalisableRange<float>(0.01f, 300.f, 0.01f, 1.f),
+        0.01f));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Grain Max Length",
+        "Grain Max Length",
+        juce::NormalisableRange<float>(0.01f, 300.f, 0.01f, 1.f),
+        20.5f));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Grain Min StartPos",
+        "Grain Min StartPos",
+        juce::NormalisableRange<float>(0.f, 100.f, 0.01f, 1.f),
+        0.f));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Grain Max StartPos",
+        "Grain Max StartPos",
+        juce::NormalisableRange<float>(0.f, 100.f, 0.01f, 1.f),
+        100.f));
+
+    layout.add(std::make_unique<juce::AudioParameterBool>("Endless", "Endless", false));
+
+    //==============================================================================
+
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         "LowCut Freq", 
         "LowCut Freq", 
