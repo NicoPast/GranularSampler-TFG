@@ -201,6 +201,24 @@ void GranularSamplerAudioProcessor::processBlock (juce::AudioBuffer<float>& buff
         maxParam->setValueNotifyingHost(minValNorm);
     }
 
+    minValNorm = apvts.getParameter("Grain ADSR Attack")->getValue();
+    maxParam = apvts.getParameter("Grain ADSR Decay");
+    if (maxParam->getValue() < minValNorm)
+    {
+        maxParam->setValueNotifyingHost(minValNorm);
+    }
+
+    minValNorm = apvts.getParameter("Grain ADSR Decay")->getValue();
+    maxParam = apvts.getParameter("Grain ADSR Sustain");
+    if (maxParam->getValue() < minValNorm)
+    {
+        maxParam->setValueNotifyingHost(minValNorm);
+    }
+
+    EnvelopeType type = static_cast<EnvelopeType>(apvts.getRawParameterValue("Grain Envelope Type")->load());
+    if (getActiveEditor() != nullptr)
+        static_cast<GranularSamplerAudioProcessorEditor*>(getActiveEditor())->updateEnvelopeType(type);
+
     // ======================================================
 
     juce::dsp::AudioBlock<float> block(buffer);
@@ -229,7 +247,10 @@ void GranularSamplerAudioProcessor::processBlock (juce::AudioBuffer<float>& buff
         buffPlay.copyNextBlockFromBufferFileTo(buffer);
 
     if (granularSampler.getState() != Stopped)
+    {
         granularSampler.getNextAudioBlock(buffer);
+        buffer.applyGain(apvts.getRawParameterValue("GranularSampler Gain")->load());
+    }
 
     //buffer.copyFrom(0, 0, *bufferToFill.buffer, 0, bufferToFill.startSample, buffer.getNumSamples());
 
@@ -448,6 +469,12 @@ juce::AudioProcessorValueTreeState::ParameterLayout
     // name, parameter name, range of parameter, step, skew value, default Val 
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "GranularSampler Gain",
+        "GranularSampler Gain",
+        juce::NormalisableRange<float>(0, 50.f, .1f, 1.f),
+        1.f));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
         "Grain Density",
         "Grain Density",
         juce::NormalisableRange<float>(0.f, 10000.f, .1f, 0.25f),
@@ -475,6 +502,41 @@ juce::AudioProcessorValueTreeState::ParameterLayout
         "Grain Max StartPos",
         "Grain Max StartPos",
         juce::NormalisableRange<float>(0.f, 100.f, 0.01f, 1.f),
+        100.f));
+
+    // choices for the slope types
+    juce::StringArray envelopeChoices;
+    envelopeChoices.add("ADSR");
+    envelopeChoices.add("Sinusoid");
+    envelopeChoices.add("Gaussian");
+
+    layout.add(std::make_unique<juce::AudioParameterChoice>(
+        "Grain Envelope Type",
+        "Grain Envelope Type",
+        envelopeChoices, 0));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Grain ADSR Attack",
+        "Grain ADSR Attack",
+        juce::NormalisableRange<float>(0.f, 100.f, 1.f, 1.f),
+        25.f));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Grain ADSR Decay",
+        "Grain ADSR Decay",
+        juce::NormalisableRange<float>(0.f, 100.f, 1.f, 1.f),
+        50.f));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Grain ADSR Sustain",
+        "Grain ADSR Sustain",
+        juce::NormalisableRange<float>(0.f, 100.f, 1.f, 1.f),
+        75.f));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Grain Sin Freq",
+        "Grain Sin Freq",
+        juce::NormalisableRange<float>(0.1f, 20000.f, .1f, 1.f),
         100.f));
 
     layout.add(std::make_unique<juce::AudioParameterBool>("Endless", "Endless", false));

@@ -22,7 +22,8 @@ Grain::Grain(juce::AudioBuffer<float> buff) : grainBuffer(buff)
 
 Grain::Grain(juce::AudioBuffer<float> buff, juce::int64 originPos, juce::int64 staPos, juce::int64 numSamples)
 {
-    resetGrain(buff, originPos, staPos, numSamples);
+    GranularSamplerSettings settings;
+    resetGrain(buff, originPos, staPos, numSamples, settings);
 }
 
 Grain::~Grain()
@@ -30,7 +31,7 @@ Grain::~Grain()
 
 }
 
-void Grain::resetGrain(juce::AudioBuffer<float> buff, juce::int64 originPos, juce::int64 staPos, juce::int64 numSamples)
+void Grain::resetGrain(juce::AudioBuffer<float> buff, juce::int64 originPos, juce::int64 staPos, juce::int64 numSamples, GranularSamplerSettings& settings)
 {
     grainBuffer.setSize(buff.getNumChannels(), numSamples);
 
@@ -46,19 +47,20 @@ void Grain::resetGrain(juce::AudioBuffer<float> buff, juce::int64 originPos, juc
 
     juce::int64 total = endPos - staPos;
 
-    setADSR(44100.0, total / 4, total / 4, total / 4, total / 4);
+    setADSR(44100.0, total * settings.attackPerc, total * settings.decPerc,
+        total * settings.sustPerc, total * settings.relPerc);
 }
 
-void Grain::setADSR(double sampleRate, float attackSecs, float decaySecs,
-    float sustSecs, float relSecs)
-{
-    adsr.setSampleRate(sampleRate);
-
-    juce::ADSR::Parameters param(attackSecs, decaySecs, sustSecs, relSecs);
-    adsr.setParameters(param);
-
-    adsr.applyEnvelopeToBuffer(grainBuffer, startPos, endPos);
-}
+//void Grain::setADSR(double sampleRate, float attackSecs, float decaySecs,
+//    float sustSecs, float relSecs)
+//{
+//    adsr.setSampleRate(sampleRate);
+//
+//    juce::ADSR::Parameters param(attackSecs, decaySecs, sustSecs, relSecs);
+//    adsr.setParameters(param);
+//
+//    adsr.applyEnvelopeToBuffer(grainBuffer, startPos, endPos);
+//}
 
 void Grain::setADSR(double sampleRate, juce::int64 attackSamp, juce::int64 decaySamp,
     juce::int64 sustSamp, juce::int64 relSamp)

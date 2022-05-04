@@ -89,7 +89,7 @@ void GranularSampler::getNextAudioBlock(juce::AudioBuffer<float>& buffer)
                 .nextInt(size);
             Grain* g = grainPool.front();
             grainPool.pop_front();
-            g->resetGrain(fileBuff->getBuffer(), randomFilePos, randomStartPos, grainSize);
+            g->resetGrain(fileBuff->getBuffer(), randomFilePos, randomStartPos, grainSize, settings);
             playingGrain.push_back(g);
             //playingGrain.push_back(new Grain(fileBuff->getBuffer(), randomFilePos, randomStartPos, grainSize));
         }
@@ -150,7 +150,7 @@ void GranularSampler::getNextAudioBlock(juce::AudioBuffer<float>& buffer)
         //}
 
         // TODO: be more clever than this
-        // quizas debería implementar un compresor?
+        // quizas deberÃ­a implementar un compresor?
         float strength = 1.f;
 
         buffer.applyGain(strength * 1.f / played);
@@ -235,8 +235,11 @@ GranularSamplerSettings getGranularSamplerSettings(juce::AudioProcessorValueTree
     settings.startingPosMin = apvts.getRawParameterValue("Grain Min StartPos")->load();
     settings.startingPosMax = apvts.getRawParameterValue("Grain Max StartPos")->load();
     //adsr
+    settings.attackPerc = apvts.getRawParameterValue("Grain ADSR Attack")->load() / 100.f;
+    settings.decPerc = apvts.getRawParameterValue("Grain ADSR Decay")->load() / 100.f - settings.attackPerc;
+    settings.sustPerc = apvts.getRawParameterValue("Grain ADSR Sustain")->load() / 100.f - (settings.attackPerc + settings.decPerc);
+    settings.relPerc = 1 - (settings.attackPerc + settings.decPerc + settings.sustPerc);
     settings.endless = apvts.getRawParameterValue("Endless")->load() > 0.5f;
-
 
     return settings;
 }

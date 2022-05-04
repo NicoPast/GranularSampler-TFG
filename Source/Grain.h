@@ -10,6 +10,7 @@
 
 #pragma once
 #include "JuceHeader.h"
+#include "CommonProcessor.h"
 
 class Grain
 {
@@ -19,10 +20,12 @@ public:
     Grain(juce::AudioBuffer<float> buff, juce::int64 originPos, juce::int64 staPos, juce::int64 numSamples);
     ~Grain();
 
-    void resetGrain(juce::AudioBuffer<float> buff, juce::int64 originPos, juce::int64 staPos, juce::int64 numSamples);
+    void resetGrain(juce::AudioBuffer<float> buff, juce::int64 originPos,
+        juce::int64 staPos, juce::int64 numSamples,
+        GranularSamplerSettings& settings);
 
-    void setADSR(double sampleRate, float attackSecs, float decaySecs,
-        float sustSecs, float relSecs);
+    //void setADSR(double sampleRate, float attackSecs, float decaySecs,
+    //    float sustSecs, float relSecs);
 
     void setADSR(double sampleRate, juce::int64 attackSamp, juce::int64 decaySamp,
         juce::int64 sustSamp, juce::int64 relSamp);

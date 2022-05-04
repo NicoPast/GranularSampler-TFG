@@ -69,17 +69,29 @@ private:
 public:
     void updateSamplerState(TransportState state);
 
+    void updateEnvelopeType(EnvelopeType type);
+
 private:
     TransportState prevoiusSamplerState;
     juce::TextButton playSamplerButton, stopSamplerButton;
 
-    RotarySliderWithLabels grainDensitySlider, 
+    RotarySliderWithLabels granularSamplerGainSlider, grainDensitySlider,
         grainMinLengthSlider, grainMaxLengthSlider,
-        grainMinStartPosSlider, grainMaxStartPosSlider;
+        grainMinStartPosSlider, grainMaxStartPosSlider,
+        grainEnvelopeTypeSlider,
+        grainADSRAttackSlider, grainADSRDecaySlider,
+        grainADSRSustainSlider,
+        grainSINFreqSlider;
 
-    SliderAttachment grainDensitySliderAttachment,
+    SliderAttachment granularSamplerGainSliderAttachment, grainDensitySliderAttachment,
         grainMinLenghtSliderAttachment, grainMaxLenghtSliderAttachment,
-        grainMinStartPosSliderAttachment, grainMaxStartPosSliderAttachment;
+        grainMinStartPosSliderAttachment, grainMaxStartPosSliderAttachment,
+        grainEnvelopeTypeSliderAttachment,
+        grainADSRAttackSliderAttachment, grainADSRDecaySliderAttachment,
+        grainADSRSustainSliderAttachment,
+        grainSINFreqSliderAttachment;
+
+    EnvelopeType envelopeType;
 
     void playSamplerButtonClicked();
 

@@ -13,11 +13,17 @@
 GranularSamplerAudioProcessorEditor::GranularSamplerAudioProcessorEditor(GranularSamplerAudioProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p),
     responseCurveComponent(audioProcessor),
+    granularSamplerGainSlider(*audioProcessor.apvts.getParameter("GranularSampler Gain"), "dB"),
     grainDensitySlider(*audioProcessor.apvts.getParameter("Grain Density"), "%"),
     grainMinLengthSlider(*audioProcessor.apvts.getParameter("Grain Min Length"), "sec"),
     grainMaxLengthSlider(*audioProcessor.apvts.getParameter("Grain Max Length"), "sec"),
     grainMinStartPosSlider(*audioProcessor.apvts.getParameter("Grain Min StartPos"), "%"),
     grainMaxStartPosSlider(*audioProcessor.apvts.getParameter("Grain Max StartPos"), "%"),
+    grainEnvelopeTypeSlider(*audioProcessor.apvts.getParameter("Grain Envelope Type"), ""),
+    grainADSRAttackSlider(*audioProcessor.apvts.getParameter("Grain ADSR Attack"), "%"),
+    grainADSRDecaySlider(*audioProcessor.apvts.getParameter("Grain ADSR Decay"), "%"),
+    grainADSRSustainSlider(*audioProcessor.apvts.getParameter("Grain ADSR Sustain"), "%"),
+    grainSINFreqSlider(*audioProcessor.apvts.getParameter("Grain Sin Freq"), "Hz"),
 
     peakFreqSlider(*audioProcessor.apvts.getParameter("Peak Freq"), "Hz"),
     peakGainSlider(*audioProcessor.apvts.getParameter("Peak Gain"), "dB"),
@@ -27,12 +33,18 @@ GranularSamplerAudioProcessorEditor::GranularSamplerAudioProcessorEditor(Granula
     highCutFreqSlider(*audioProcessor.apvts.getParameter("HighCut Freq"), "Hz"),
     highCutSlopeSlider(*audioProcessor.apvts.getParameter("HighCut Slope"), "db/Oct"),
 
+    granularSamplerGainSliderAttachment(audioProcessor.apvts, "GranularSampler Gain", granularSamplerGainSlider),
     grainDensitySliderAttachment(audioProcessor.apvts, "Grain Density", grainDensitySlider),
     grainMinLenghtSliderAttachment(audioProcessor.apvts, "Grain Min Length", grainMinLengthSlider),
     grainMaxLenghtSliderAttachment(audioProcessor.apvts, "Grain Max Length", grainMaxLengthSlider),
     grainMinStartPosSliderAttachment(audioProcessor.apvts, "Grain Min StartPos", grainMinStartPosSlider),
     grainMaxStartPosSliderAttachment(audioProcessor.apvts, "Grain Max StartPos", grainMaxStartPosSlider),
-    
+    grainEnvelopeTypeSliderAttachment(audioProcessor.apvts, "Grain Envelope Type", grainEnvelopeTypeSlider),
+    grainADSRAttackSliderAttachment(audioProcessor.apvts, "Grain ADSR Attack", grainADSRAttackSlider),
+    grainADSRDecaySliderAttachment(audioProcessor.apvts, "Grain ADSR Decay", grainADSRDecaySlider),
+    grainADSRSustainSliderAttachment(audioProcessor.apvts, "Grain ADSR Sustain", grainADSRSustainSlider),
+    grainSINFreqSliderAttachment(audioProcessor.apvts, "Grain Sin Freq", grainSINFreqSlider),
+
     peakFreqSliderAttachment(audioProcessor.apvts, "Peak Freq", peakFreqSlider),
     peakGainSliderAttachment(audioProcessor.apvts, "Peak Gain", peakGainSlider),
     peakQualitySliderAttachment(audioProcessor.apvts, "Peak Quality", peakQualitySlider),
@@ -49,6 +61,9 @@ GranularSamplerAudioProcessorEditor::GranularSamplerAudioProcessorEditor(Granula
 {
     // Make sure that before the constructor has finished, you've set the
     // editor's size to whatever you need it to be.
+
+    granularSamplerGainSlider.labels.add({ 0.f, "0dB" });
+    granularSamplerGainSlider.labels.add({ 1.f, "10dB" });
 
     grainDensitySlider.labels.add({ 0.f, "0.0%"});
     grainDensitySlider.labels.add({ 1.f, "10.0k%"});
@@ -89,6 +104,17 @@ GranularSamplerAudioProcessorEditor::GranularSamplerAudioProcessorEditor(Granula
     highCutSlopeSlider.labels.add({ 0.f, "12" });
     highCutSlopeSlider.labels.add({ 1.f, "48" });
 
+    grainADSRAttackSlider.labels.add({ 0.f, "0%" });
+    grainADSRAttackSlider.labels.add({ 1.f, "100%" });
+
+    grainADSRDecaySlider.labels.add({ 0.f, "0%" });
+    grainADSRDecaySlider.labels.add({ 1.f, "100%" });
+
+    grainADSRSustainSlider.labels.add({ 0.f, "0%" });
+    grainADSRSustainSlider.labels.add({ 1.f, "100%" });
+
+    grainSINFreqSlider.labels.add({ 0.f, "0.1Hz" });
+    grainSINFreqSlider.labels.add({ 1.f, "20kHz" });
 
     for (auto* comp : getComps()) {
         addAndMakeVisible(comp);
@@ -116,6 +142,13 @@ GranularSamplerAudioProcessorEditor::GranularSamplerAudioProcessorEditor(Granula
     stopSamplerButton.setButtonText("Click to Stop Sampler");
     stopSamplerButton.setEnabled(false);
     stopSamplerButton.setColour(juce::TextButton::buttonColourId, juce::Colours::red);
+
+    grainADSRAttackSlider.setVisible(false);
+    grainADSRDecaySlider.setVisible(false);
+    grainADSRSustainSlider.setVisible(false);
+    grainSINFreqSlider.setVisible(false);
+
+    updateEnvelopeType(static_cast<EnvelopeType>(audioProcessor.apvts.getRawParameterValue("Grain Envelope Type")->load()));
 
     auto safePtr = juce::Component::SafePointer<GranularSamplerAudioProcessorEditor>(this);
 
@@ -156,9 +189,21 @@ GranularSamplerAudioProcessorEditor::GranularSamplerAudioProcessorEditor(Granula
     prevoiusPlayerState = audioProcessor.getPlayerTransportState();
     prevoiusSamplerState = audioProcessor.getSamplerTransportState();
 
+    granularSamplerGainSlider.setLookAndFeel(&lnf);
+    grainDensitySlider.setLookAndFeel(&lnf);
+    grainMinLengthSlider.setLookAndFeel(&lnf);
+    grainMaxLengthSlider.setLookAndFeel(&lnf);
+    grainMinStartPosSlider.setLookAndFeel(&lnf);
+    grainMaxStartPosSlider.setLookAndFeel(&lnf);
+    grainEnvelopeTypeSlider.setLookAndFeel(&lnf);
+    grainADSRAttackSlider.setLookAndFeel(&lnf);
+    grainADSRDecaySlider.setLookAndFeel(&lnf);
+    grainADSRSustainSlider.setLookAndFeel(&lnf);
+    grainSINFreqSlider.setLookAndFeel(&lnf);
+
     eqSetUp(safePtr);
 
-    setSize (1200, 480);
+    setSize (1200, 600);
 }
 
 GranularSamplerAudioProcessorEditor::~GranularSamplerAudioProcessorEditor()
@@ -168,6 +213,18 @@ GranularSamplerAudioProcessorEditor::~GranularSamplerAudioProcessorEditor()
     stopPlayerButton.setLookAndFeel(nullptr);
     playSamplerButton.setLookAndFeel(nullptr);
     stopSamplerButton.setLookAndFeel(nullptr);
+
+    granularSamplerGainSlider.setLookAndFeel(nullptr);
+    grainDensitySlider.setLookAndFeel(nullptr);
+    grainMinLengthSlider.setLookAndFeel(nullptr);
+    grainMaxLengthSlider.setLookAndFeel(nullptr);
+    grainMinStartPosSlider.setLookAndFeel(nullptr);
+    grainMaxStartPosSlider.setLookAndFeel(nullptr);
+    grainEnvelopeTypeSlider.setLookAndFeel(nullptr);
+    grainADSRAttackSlider.setLookAndFeel(nullptr);
+    grainADSRDecaySlider.setLookAndFeel(nullptr);
+    grainADSRSustainSlider.setLookAndFeel(nullptr);
+    grainSINFreqSlider.setLookAndFeel(nullptr);
 
     eqEnabledButton.setLookAndFeel(nullptr);
     peakBypassedButton.setLookAndFeel(nullptr);
@@ -221,7 +278,7 @@ void GranularSamplerAudioProcessorEditor::resized()
     stopSamplerButton.setBounds(stopSamplerButtonArea);
 
     auto infoBar = bounds.removeFromTop(25);
-    bounds.removeFromRight(bounds.getWidth() / 2.f);
+    auto rightArea = bounds.removeFromRight(bounds.getWidth() / 2.f);
     auto densityBoundsSlider = bounds.removeFromTop(bounds.getHeight() / 2.f);
     auto lengthSliders = bounds.removeFromTop(bounds.getHeight() / 2.f);
     auto minLengthSlider = lengthSliders.removeFromLeft(lengthSliders.getWidth() / 2.f);
@@ -234,6 +291,20 @@ void GranularSamplerAudioProcessorEditor::resized()
 
     grainMinStartPosSlider.setBounds(minStartPosSlider);
     grainMaxStartPosSlider.setBounds(bounds);
+
+    auto rightLowArea = rightArea.removeFromBottom(rightArea.getHeight() / 2.f);
+    granularSamplerGainSlider.setBounds(rightArea);
+
+    auto envelopeSlidersArea = rightLowArea.removeFromRight(rightLowArea.getWidth() / 3.f);
+    grainEnvelopeTypeSlider.setBounds(rightLowArea);
+
+    grainSINFreqSlider.setBounds(envelopeSlidersArea);
+
+    auto adsrDecayArea = envelopeSlidersArea.removeFromBottom(envelopeSlidersArea.getHeight() * 2.f / 3.f);
+    auto adsrSustainArea = adsrDecayArea.removeFromBottom(adsrDecayArea.getHeight() / 2.f);
+    grainADSRAttackSlider.setBounds(envelopeSlidersArea);
+    grainADSRDecaySlider.setBounds(adsrDecayArea);
+    grainADSRSustainSlider.setBounds(adsrSustainArea);
 }
 
 void GranularSamplerAudioProcessorEditor::updatePlayerState(TransportState state)
@@ -338,6 +409,47 @@ void GranularSamplerAudioProcessorEditor::updateSamplerState(TransportState stat
 
         default:
             DBG("INVALIS STATE RECIEVED");
+            break;
+        }
+    }
+}
+
+void GranularSamplerAudioProcessorEditor::updateEnvelopeType(EnvelopeType type)
+{
+    if (envelopeType != type)
+    {
+        const juce::MessageManagerLock mmLock;
+        switch (envelopeType)
+        {
+        case ADSR:
+            grainADSRAttackSlider.setVisible(false);
+            grainADSRDecaySlider.setVisible(false);
+            grainADSRSustainSlider.setVisible(false);
+            break;
+        case Sinusoid:
+            grainSINFreqSlider.setVisible(false);
+            break;
+        case Gaussian:
+            break;
+        default:
+            break;
+        }
+
+        envelopeType = type;
+
+        switch (envelopeType)
+        {
+        case ADSR:
+            grainADSRAttackSlider.setVisible(true);
+            grainADSRDecaySlider.setVisible(true);
+            grainADSRSustainSlider.setVisible(true);
+            break;
+        case Sinusoid:
+            grainSINFreqSlider.setVisible(true);
+            break;
+        case Gaussian:
+            break;
+        default:
             break;
         }
     }
@@ -491,11 +603,17 @@ std::vector<juce::Component*> GranularSamplerAudioProcessorEditor::getComps()
         &playSamplerButton,
         &stopSamplerButton,
 
+        &granularSamplerGainSlider,
         &grainDensitySlider,
         &grainMinLengthSlider,
         &grainMaxLengthSlider,
         &grainMinStartPosSlider,
         &grainMaxStartPosSlider,
+        &grainEnvelopeTypeSlider,
+        &grainADSRAttackSlider,
+        &grainADSRDecaySlider,
+        &grainADSRSustainSlider,
+        &grainSINFreqSlider,
 
         &peakFreqSlider,
         &peakGainSlider,

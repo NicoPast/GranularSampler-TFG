@@ -98,3 +98,10 @@ struct AnalyzerButton : juce::ToggleButton
 
     juce::Path randomPath;
 };
+
+enum EnvelopeType
+{
+    ADSR,
+    Sinusoid,
+    Gaussian
+};

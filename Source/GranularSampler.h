@@ -15,16 +15,6 @@
 #include "CommonProcessor.h"
 #include "FileBufferPlayer.h"
 
-struct GranularSamplerSettings
-{
-    float maximumSecondsDuration{ 0 },
-        grainDensity{ 0 }, grainMaxLength{ 0 }, grainMinLength{ 0 },
-        startingPosMin{ 0 }, startingPosMax{ 0 },
-        attackPerc{ 0 }, decPerc{ 0 }, sustPerc{ 0 }, relPerc{ 0 };
-
-    bool endless{ false };
-};
-
 GranularSamplerSettings getGranularSamplerSettings(juce::AudioProcessorValueTreeState& apvts);
 
 class GranularSamplerAudioProcessor;
