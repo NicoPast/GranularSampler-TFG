@@ -31,7 +31,9 @@ Grain::~Grain()
 
 }
 
-void Grain::resetGrain(juce::AudioBuffer<float> buff, juce::int64 originPos, juce::int64 staPos, juce::int64 numSamples, GranularSamplerSettings& settings)
+void Grain::resetGrain(juce::AudioBuffer<float> buff, 
+    juce::int64 originPos, juce::int64 staPos, juce::int64 numSamples, 
+    GranularSamplerSettings& settings)
 {
     grainBuffer.setSize(buff.getNumChannels(), numSamples);
 
@@ -47,8 +49,11 @@ void Grain::resetGrain(juce::AudioBuffer<float> buff, juce::int64 originPos, juc
 
     juce::int64 total = endPos - staPos;
 
-    setADSR(44100.0, total * settings.attackPerc, total * settings.decPerc,
-        total * settings.sustPerc, total * settings.relPerc);
+    // settings para los dos valores
+    setLinear(total, 0.5, 0.5);
+
+    //setADSR(44100.0, total * settings.attackPerc, total * settings.decPerc,
+    //    total * settings.sustPerc, total * settings.relPerc);
 }
 
 //void Grain::setADSR(double sampleRate, float attackSecs, float decaySecs,
@@ -77,6 +82,28 @@ void Grain::setADSR(double sampleRate, juce::int64 attackSamp, juce::int64 decay
     adsr.noteOff();
     adsr.applyEnvelopeToBuffer(grainBuffer, endPos - relSamp, relSamp);
 }
+
+void Grain::setLinear(juce::int64 total, float leftRange, float rightRange)
+{
+    auto numChannels = grainBuffer.getNumChannels();
+
+    juce::int64 totalLeft = leftRange * total;
+
+    for (juce::int64 i = 0; i < totalLeft; ++i)
+    {
+        for (int j = 0; j < numChannels; ++j)
+            grainBuffer.getWritePointer(j)[startPos + i] *= float(i) / totalLeft;
+    }
+
+    juce::int64 totalRight = rightRange * total;
+
+    for (juce::int64 i = 0; i < totalRight; ++i)
+    {
+        for (int j = 0; j < numChannels; ++j)
+            grainBuffer.getWritePointer(j)[endPos - i] *= float(i) / totalRight;
+    }
+}
+
 
 bool Grain::advanceGrainStartPos(juce::int64 playedSamples)
 {

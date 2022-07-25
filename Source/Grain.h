@@ -50,14 +50,21 @@ public:
 private:
     void applyADSR();
 
+    void setLinear(juce::int64 total, float leftRange, float rightRange);
+
     juce::AudioBuffer<float> grainBuffer;
+    // position from the audio buffer
     juce::int64 startingSample;
 
     juce::ADSR adsr;
 
     // random variation of Grain
+
+    // starting position from the audio source
     juce::int64 startPos = 0;
+    // current playing position
     juce::int64 currentPos;
+    // endposition
     juce::int64 endPos;
     // TODO: ????? lo hago?
     float paning = 0; // -1.f left, 0 centered, 1.f right

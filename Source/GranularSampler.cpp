@@ -50,8 +50,10 @@ void GranularSampler::getNextAudioBlock(juce::AudioBuffer<float>& buffer)
 
     GranularSamplerSettings settings = getGranularSamplerSettings(audioProcessor->apvts);
 
+    bool stop = false;
+
     int numSamples = buffer.getNumSamples();
-    if (totalNumSamples < numSamples + samplerPos)
+    if (stop && totalNumSamples < numSamples + samplerPos)
     {
         changeState(Stopping);
         numSamples = totalNumSamples - samplerPos;
