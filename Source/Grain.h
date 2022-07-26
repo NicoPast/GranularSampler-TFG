@@ -65,6 +65,9 @@ private:
 
     juce::ADSR adsr;
 
+    EnvelopeType envelopeType;
+    Envelope* envelope = nullptr;
+
     // random variation of Grain
 
     // starting position of the grain Buffer

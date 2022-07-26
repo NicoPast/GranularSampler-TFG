@@ -140,24 +140,80 @@ enum TransportState
     Stopping
 };
 
-struct ADSRSettings
+enum EnvelopeType
+{
+    ADSR,
+    Lineal,
+    Sinusoid
+};
+
+struct Envelope 
+{
+    virtual float applyEnvelopeToSample(int totalSamples, int pos) = 0;
+};
+
+struct LinealSettings : public Envelope
+{
+    float leftRange{ 0.5f }, rightRange{ 0.5f };
+
+    LinealSettings() {};
+
+    LinealSettings(float left, float right) : 
+        leftRange(left), rightRange(right) {}
+
+    virtual float applyEnvelopeToSample(int totalSamples, int pos)
+    {
+        juce::int64 totalLeft = leftRange * totalSamples;
+        juce::int64 totalRight = rightRange * totalSamples;
+
+        if (pos < totalLeft)
+            return float(pos) / totalLeft;
+        else if (pos > totalSamples - totalRight)
+            return (float(totalSamples - pos)) / totalRight;
+        else return 1.f;
+    }
+};
+
+struct ADSRSettings : public Envelope
 {
     float attackPerc{ 0.25f }, decPerc{ 0.25f }, 
         sustPerc{ 0.25f }, relPerc{ 0.25f };
-};
 
-struct LinealSettings
-{
-    float leftRange{ 0.5f }, rightRange{ 0.5f };
+    ADSRSettings() {};
+
+    ADSRSettings(float attack, float decay, float sustain, float release) :
+        attackPerc(attack), decPerc(decay), 
+        sustPerc(sustain), relPerc(release) {}
+
+    virtual float applyEnvelopeToSample(int totalSamples, int pos)
+    {
+        juce::int64 totalAtt = attackPerc * totalSamples;
+        juce::int64 totalDec = decPerc * totalSamples;
+        juce::int64 totalSus = sustPerc * totalSamples;
+        juce::int64 totalRel = relPerc * totalSamples;
+
+        juce::int64 totalRight = 0.5f * totalSamples;
+
+        if (pos < totalAtt)
+            return float(pos) / totalAtt;
+        else if (pos < totalAtt + totalDec)
+            return 0.8f + (0.2f * float(totalAtt + totalDec - pos) / totalDec);
+        else if (pos < totalAtt + totalDec + totalSus)
+            return 0.8f;
+        else 
+            return 0.8f * float(totalSamples - pos) / totalRel;
+    }
 };
 
 struct GranularSamplerSettings
 {
+    EnvelopeType envelopeType = EnvelopeType::Lineal;
+
     float maximumSecondsDuration{ 0 },
         grainDensity{ 0 }, grainMaxLength{ 0 }, grainMinLength{ 0 },
         startingPosMin{ 0 }, startingPosMax{ 0 };
-        ADSRSettings adsrSettings { 0.25f, 0.25f, 0.25f, 0.25f };
-        LinealSettings linealSettings { 0.5f, 0.5f };
+        LinealSettings linealSettings;
+        ADSRSettings adsrSettings;
 
     bool endless{ false };
 };

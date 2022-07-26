@@ -84,6 +84,8 @@ public:
 private:
     MonoChain leftChain, rightChain;
 
+    void restrainParameters();
+
     //==============================================================================
 
 #pragma region SamplerPlayer

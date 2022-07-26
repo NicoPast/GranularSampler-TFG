@@ -250,12 +250,18 @@ GranularSamplerSettings getGranularSamplerSettings(juce::AudioProcessorValueTree
     settings.grainMaxLength = apvts.getRawParameterValue("Grain Max Length")->load();
     settings.startingPosMin = apvts.getRawParameterValue("Grain Min StartPos")->load();
     settings.startingPosMax = apvts.getRawParameterValue("Grain Max StartPos")->load();
+    //lineal
+    settings.linealSettings.leftRange = apvts.getRawParameterValue("Grain Lin Left")->load() / 100.f;
+    settings.linealSettings.rightRange = 1.f - apvts.getRawParameterValue("Grain Lin Left")->load() / 100.f;
     //adsr
-    settings.attackPerc = apvts.getRawParameterValue("Grain ADSR Attack")->load() / 100.f;
-    settings.decPerc = apvts.getRawParameterValue("Grain ADSR Decay")->load() / 100.f - settings.attackPerc;
-    settings.sustPerc = apvts.getRawParameterValue("Grain ADSR Sustain")->load() / 100.f - (settings.attackPerc + settings.decPerc);
-    settings.relPerc = 1 - (settings.attackPerc + settings.decPerc + settings.sustPerc);
+    settings.adsrSettings.attackPerc = apvts.getRawParameterValue("Grain ADSR Attack")->load() / 100.f;
+    settings.adsrSettings.decPerc = apvts.getRawParameterValue("Grain ADSR Decay")->load() / 100.f - settings.adsrSettings.attackPerc;
+    settings.adsrSettings.sustPerc = apvts.getRawParameterValue("Grain ADSR Sustain")->load() / 100.f - (settings.adsrSettings.attackPerc + settings.adsrSettings.decPerc);
+    settings.adsrSettings.relPerc = 1.f - (settings.adsrSettings.attackPerc + settings.adsrSettings.decPerc + settings.adsrSettings.sustPerc);
+
     settings.endless = apvts.getRawParameterValue("Endless")->load() > 0.5f;
+
+    settings.envelopeType = static_cast<EnvelopeType>(apvts.getRawParameterValue("Grain Envelope Type")->load());
 
     return settings;
 }

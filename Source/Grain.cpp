@@ -28,7 +28,11 @@ Grain::Grain(juce::AudioBuffer<float> buff, juce::int64 originPos, juce::int64 s
 
 Grain::~Grain()
 {
-
+    if (envelope != nullptr)
+    {
+        delete envelope;
+        envelope = nullptr;
+    }
 }
 
 void Grain::init(int numChannels, int numSamples)
@@ -47,6 +51,12 @@ void Grain::resetGrain(juce::AudioBuffer<float> buff,
     //    grainBuffer.copyFrom(i, 0, buff, 0, originPos, numSamples);
     //}
 
+    if (envelope != nullptr)
+    {
+        delete envelope;
+        envelope = nullptr;
+    }
+
     startingSample = originPos;
     startPos = staPos;
     currentPos = startPos;
@@ -54,10 +64,25 @@ void Grain::resetGrain(juce::AudioBuffer<float> buff,
 
     totalSamples = endPos - staPos;
 
-    settings.attackPerc;
-    settings.decPerc;
-    settings.sustPerc;
-    settings.relPerc;
+    switch (settings.envelopeType)
+    {
+    case EnvelopeType::ADSR:
+        envelope = new ADSRSettings(settings.adsrSettings.attackPerc,
+            settings.adsrSettings.decPerc,
+            settings.adsrSettings.sustPerc,
+            settings.adsrSettings.relPerc);
+        DBG("ADSR");
+        break;
+    case EnvelopeType::Lineal:
+        envelope = new LinealSettings(settings.linealSettings.leftRange,
+            settings.linealSettings.rightRange);
+        DBG("LINEAL");
+        break;
+    case EnvelopeType::Sinusoid:
+        break;
+    default:
+        break;
+    }
 
     // settings para los dos valores
     //setLinear(totalSamples, 0.5, 0.5);
@@ -119,6 +144,11 @@ float Grain::applyEnvelopeToSample(int i)
 {
     // TODO: more than just lineal
     int pos = currentPos + i;
+
+    if(envelope)
+        return envelope->applyEnvelopeToSample(totalSamples, pos);
+
+    //if there is no envelope, do this one as default
     juce::int64 totalLeft = 0.5f * totalSamples;
     juce::int64 totalRight = 0.5f * totalSamples;
 

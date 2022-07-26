@@ -189,33 +189,7 @@ void GranularSamplerAudioProcessor::processBlock (juce::AudioBuffer<float>& buff
 
     updateFilters();
 
-    float minValNorm = apvts.getParameter("Grain Min Length")->getValue();
-    auto maxParam = apvts.getParameter("Grain Max Length");
-    if (maxParam->getValue() < minValNorm)
-    {
-        maxParam->setValueNotifyingHost(minValNorm);
-    }
-
-    minValNorm = apvts.getParameter("Grain Min StartPos")->getValue();
-    maxParam = apvts.getParameter("Grain Max StartPos");
-    if (maxParam->getValue() < minValNorm)
-    {
-        maxParam->setValueNotifyingHost(minValNorm);
-    }
-
-    minValNorm = apvts.getParameter("Grain ADSR Attack")->getValue();
-    maxParam = apvts.getParameter("Grain ADSR Decay");
-    if (maxParam->getValue() < minValNorm)
-    {
-        maxParam->setValueNotifyingHost(minValNorm);
-    }
-
-    minValNorm = apvts.getParameter("Grain ADSR Decay")->getValue();
-    maxParam = apvts.getParameter("Grain ADSR Sustain");
-    if (maxParam->getValue() < minValNorm)
-    {
-        maxParam->setValueNotifyingHost(minValNorm);
-    }
+    restrainParameters();
 
     EnvelopeType type = static_cast<EnvelopeType>(apvts.getRawParameterValue("Grain Envelope Type")->load());
     if (getActiveEditor() != nullptr)
@@ -306,6 +280,44 @@ void GranularSamplerAudioProcessor::setStateInformation (const void* data, int s
     if (tree.isValid()) {
         apvts.replaceState(tree);
         updateFilters();
+    }
+}
+
+void GranularSamplerAudioProcessor::restrainParameters()
+{
+    float minValNorm = apvts.getParameter("Grain Min Length")->getValue();
+    auto maxParam = apvts.getParameter("Grain Max Length");
+    if (maxParam->getValue() < minValNorm)
+    {
+        maxParam->setValueNotifyingHost(minValNorm);
+    }
+
+    minValNorm = apvts.getParameter("Grain Min StartPos")->getValue();
+    maxParam = apvts.getParameter("Grain Max StartPos");
+    if (maxParam->getValue() < minValNorm)
+    {
+        maxParam->setValueNotifyingHost(minValNorm);
+    }
+
+    minValNorm = apvts.getParameter("Grain Lin Left")->getValue();
+    maxParam = apvts.getParameter("Grain Lin Right");
+    if (maxParam->getValue() < minValNorm)
+    {
+        maxParam->setValueNotifyingHost(minValNorm);
+    }
+
+    minValNorm = apvts.getParameter("Grain ADSR Attack")->getValue();
+    maxParam = apvts.getParameter("Grain ADSR Decay");
+    if (maxParam->getValue() < minValNorm)
+    {
+        maxParam->setValueNotifyingHost(minValNorm);
+    }
+
+    minValNorm = apvts.getParameter("Grain ADSR Decay")->getValue();
+    maxParam = apvts.getParameter("Grain ADSR Sustain");
+    if (maxParam->getValue() < minValNorm)
+    {
+        maxParam->setValueNotifyingHost(minValNorm);
     }
 }
 
@@ -509,8 +521,8 @@ juce::AudioProcessorValueTreeState::ParameterLayout
     // choices for the slope types
     juce::StringArray envelopeChoices;
     envelopeChoices.add("ADSR");
+    envelopeChoices.add("Lineal");
     envelopeChoices.add("Sinusoid");
-    envelopeChoices.add("Gaussian");
 
     layout.add(std::make_unique<juce::AudioParameterChoice>(
         "Grain Envelope Type",
@@ -532,6 +544,18 @@ juce::AudioProcessorValueTreeState::ParameterLayout
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         "Grain ADSR Sustain",
         "Grain ADSR Sustain",
+        juce::NormalisableRange<float>(0.f, 100.f, 1.f, 1.f),
+        75.f));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Grain Lin Left",
+        "Grain Lin Left",
+        juce::NormalisableRange<float>(0.f, 100.f, .1f, 1.f),
+        25.f));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Grain Lin Right",
+        "Grain Lin Right",
         juce::NormalisableRange<float>(0.f, 100.f, 1.f, 1.f),
         75.f));
 

@@ -81,6 +81,7 @@ private:
         grainEnvelopeTypeSlider,
         grainADSRAttackSlider, grainADSRDecaySlider,
         grainADSRSustainSlider,
+        grainLinLeftSlider, grainLinRightSlider,
         grainSINFreqSlider;
 
     SliderAttachment granularSamplerGainSliderAttachment, grainDensitySliderAttachment,
@@ -89,6 +90,7 @@ private:
         grainEnvelopeTypeSliderAttachment,
         grainADSRAttackSliderAttachment, grainADSRDecaySliderAttachment,
         grainADSRSustainSliderAttachment,
+        grainLinLeftSliderAttachment, grainLinRightSliderAttachment,
         grainSINFreqSliderAttachment;
 
     EnvelopeType envelopeType;
