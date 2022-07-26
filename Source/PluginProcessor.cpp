@@ -122,7 +122,7 @@ void GranularSamplerAudioProcessor::prepareToPlay (double sampleRate, int sample
     osc.prepare(spec);
     osc.setFrequency(100);
 
-    
+    granularSampler.prepareGrains(2, samplesPerBlock);
 }
 
 void GranularSamplerAudioProcessor::releaseResources()

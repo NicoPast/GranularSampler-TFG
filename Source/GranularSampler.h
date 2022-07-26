@@ -48,6 +48,8 @@ public:
 
     void setFileBuffer(FileBufferPlayer* fBuff);
 
+    void prepareGrains(int numChannels, int numSamples);
+
 private:
     float scaleBetween(float unscaledNum, float minAllowed, float maxAllowed, float min, float max);
 

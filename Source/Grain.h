@@ -20,6 +20,8 @@ public:
     Grain(juce::AudioBuffer<float> buff, juce::int64 originPos, juce::int64 staPos, juce::int64 numSamples);
     ~Grain();
 
+    void init(int numChannels, int numSamples);
+
     void resetGrain(juce::AudioBuffer<float> buff, juce::int64 originPos,
         juce::int64 staPos, juce::int64 numSamples,
         GranularSamplerSettings& settings);
@@ -51,8 +53,6 @@ public:
 
     void clear();
 private:
-    void applyADSR();
-
     void setLinear(juce::int64 total, float leftRange, float rightRange);
 
     float applyEnvelopeToSample(int i);

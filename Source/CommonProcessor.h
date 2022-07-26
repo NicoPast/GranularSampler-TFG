@@ -140,12 +140,24 @@ enum TransportState
     Stopping
 };
 
+struct ADSRSettings
+{
+    float attackPerc{ 0.25f }, decPerc{ 0.25f }, 
+        sustPerc{ 0.25f }, relPerc{ 0.25f };
+};
+
+struct LinealSettings
+{
+    float leftRange{ 0.5f }, rightRange{ 0.5f };
+};
+
 struct GranularSamplerSettings
 {
     float maximumSecondsDuration{ 0 },
         grainDensity{ 0 }, grainMaxLength{ 0 }, grainMinLength{ 0 },
-        startingPosMin{ 0 }, startingPosMax{ 0 },
-        attackPerc{ 0.25f }, decPerc{ 0.25f }, sustPerc{ 0.25f }, relPerc{ 0.25f };
+        startingPosMin{ 0 }, startingPosMax{ 0 };
+        ADSRSettings adsrSettings { 0.25f, 0.25f, 0.25f, 0.25f };
+        LinealSettings linealSettings { 0.5f, 0.5f };
 
     bool endless{ false };
 };

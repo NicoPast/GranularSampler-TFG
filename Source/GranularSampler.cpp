@@ -50,10 +50,8 @@ void GranularSampler::getNextAudioBlock(juce::AudioBuffer<float>& buffer)
 
     GranularSamplerSettings settings = getGranularSamplerSettings(audioProcessor->apvts);
 
-    bool stop = false;
-
     int numSamples = buffer.getNumSamples();
-    if (stop && totalNumSamples < numSamples + samplerPos)
+    if (settings.endless && totalNumSamples < numSamples + samplerPos)
     {
         changeState(Stopping);
         numSamples = totalNumSamples - samplerPos;
@@ -98,7 +96,7 @@ void GranularSampler::getNextAudioBlock(juce::AudioBuffer<float>& buffer)
 
         int played = playingGrain.size();
 
-        DBG(played);
+        //DBG(played);
 
         std::list<Grain*>::iterator it = playingGrain.begin();
         while (it != playingGrain.end())
@@ -228,6 +226,14 @@ void GranularSampler::setFileBuffer(FileBufferPlayer* fBuff)
 {
     fileBuff = fBuff;
     totalNumSamples = fileBuff->getBuffer().getNumSamples();
+}
+
+void GranularSampler::prepareGrains(int numChannels, int numSamples)
+{
+    for (auto it : grainPool)
+    {
+        (*it).init(numChannels, numSamples);
+    }
 }
 
 float GranularSampler::scaleBetween(float unscaledNum, float minAllowed, float maxAllowed, float min, float max) {
