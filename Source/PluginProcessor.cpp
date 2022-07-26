@@ -121,6 +121,8 @@ void GranularSamplerAudioProcessor::prepareToPlay (double sampleRate, int sample
     spec.numChannels = getTotalNumOutputChannels();
     osc.prepare(spec);
     osc.setFrequency(100);
+
+    
 }
 
 void GranularSamplerAudioProcessor::releaseResources()

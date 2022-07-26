@@ -96,7 +96,9 @@ void GranularSampler::getNextAudioBlock(juce::AudioBuffer<float>& buffer)
             //playingGrain.push_back(new Grain(fileBuff->getBuffer(), randomFilePos, randomStartPos, grainSize));
         }
 
-        int played = 0;
+        int played = playingGrain.size();
+
+        DBG(played);
 
         std::list<Grain*>::iterator it = playingGrain.begin();
         while (it != playingGrain.end())
@@ -105,21 +107,27 @@ void GranularSampler::getNextAudioBlock(juce::AudioBuffer<float>& buffer)
             juce::int64 samples = juce::jmin<juce::int64>(numSamples,
                 (*it)->getRemainingSamples());
             juce::int64 startingPos = (*it)->getFirstSample();
-            for (int i = 0; i < buffer.getNumChannels(); i++)
+            for (int ch = 0; ch < buffer.getNumChannels(); ++ch)
             {
-                buffer.addFrom(i, startingPos, (*it)->getBuffer(), i, (*it)->getCurrentPos(), samples - startingPos);
+                //buffer.addFrom(ch, startingPos, 
+                //    (*it)->getBuffer(), ch, (*it)->getCurrentPos(), samples - startingPos,
+                //    1.f/played);
+
+                buffer.addFrom(ch, startingPos,
+                    (*it)->getNextBufferBlock(fileBuff->getBuffer(), buffer),
+                    ch, startingPos, samples - startingPos, 1.f / played);
             }
 
             if ((*it)->advanceGrainStartPos(samples))
             {
                 //delete (*it);
-                grainPool.push_back(*it);
+                grainPool.push_front(*it);
                 (*it)->clear();
                 playingGrain.erase(it++);
             }
             else ++it;
 
-            played++;
+            //played++;
         }
 
         // TODO: normalizado funciona asi asa
@@ -155,7 +163,7 @@ void GranularSampler::getNextAudioBlock(juce::AudioBuffer<float>& buffer)
         // quizas debería implementar un compresor?
         float strength = 1.f;
 
-        buffer.applyGain(strength * 1.f / played);
+        //buffer.applyGain(strength * 1.f / played);
 
         //DBG(played);
 
