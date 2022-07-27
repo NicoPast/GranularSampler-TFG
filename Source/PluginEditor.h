@@ -95,6 +95,10 @@ private:
 
     EnvelopeType envelopeType;
 
+    juce::Label grainDensityLabel, gainLabel,
+        grainDurationLabel, sourceRangeLabel, envelopeLabel,
+        creditsLabel;
+
     void playSamplerButtonClicked();
 
     void stopSamplerButtonClicked();
@@ -124,7 +128,7 @@ private:
         lowCutSlopeSliderAttachment,
         highCutSlopeSliderAttachment;
 
-    juce::Label eqTitle, lowCutTitle, highCutTitle, bandFilterTitle;
+    juce::Label eqTitleLabel, lowCutLabel, highCutLabel, bandFilterLabel;
 
     //================================== BypassedButts ===============================
 

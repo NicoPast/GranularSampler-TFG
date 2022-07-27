@@ -1,8 +1,5 @@
 #pragma once
 
-#define _USE_MATH_DEFINES
-#include <math.h>
-
 template<typename T>
 struct Fifo
 {
@@ -230,7 +227,7 @@ struct SinusoidSettings : public Envelope
     }
 
     float sinusoidFunction(float x) {
-        return 1.f - cos((x * M_PI) * 0.5f) + 0.5f;
+        return 1.f - cos((x * juce::MathConstants<float>::pi) * 0.5f) + 0.5f;
     }
 };
 
