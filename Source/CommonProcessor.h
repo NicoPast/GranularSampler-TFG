@@ -1,5 +1,8 @@
 #pragma once
 
+#define _USE_MATH_DEFINES
+#include <math.h>
+
 template<typename T>
 struct Fifo
 {
@@ -152,28 +155,6 @@ struct Envelope
     virtual float applyEnvelopeToSample(int totalSamples, int pos) = 0;
 };
 
-struct LinealSettings : public Envelope
-{
-    float leftRange{ 0.5f }, rightRange{ 0.5f };
-
-    LinealSettings() {};
-
-    LinealSettings(float left, float right) : 
-        leftRange(left), rightRange(right) {}
-
-    virtual float applyEnvelopeToSample(int totalSamples, int pos)
-    {
-        juce::int64 totalLeft = leftRange * totalSamples;
-        juce::int64 totalRight = rightRange * totalSamples;
-
-        if (pos < totalLeft)
-            return float(pos) / totalLeft;
-        else if (pos > totalSamples - totalRight)
-            return (float(totalSamples - pos)) / totalRight;
-        else return 1.f;
-    }
-};
-
 struct ADSRSettings : public Envelope
 {
     float attackPerc{ 0.25f }, decPerc{ 0.25f }, 
@@ -202,6 +183,54 @@ struct ADSRSettings : public Envelope
             return 0.8f;
         else 
             return 0.8f * float(totalSamples - pos) / totalRel;
+    }
+};
+
+struct LinealSettings : public Envelope
+{
+    float leftRange{ 0.5f }, rightRange{ 0.5f };
+
+    LinealSettings() {};
+
+    LinealSettings(float left, float right) : 
+        leftRange(left), rightRange(right) {}
+
+    virtual float applyEnvelopeToSample(int totalSamples, int pos)
+    {
+        juce::int64 totalLeft = leftRange * totalSamples;
+        juce::int64 totalRight = rightRange * totalSamples;
+
+        if (pos < totalLeft)
+            return float(pos) / totalLeft;
+        else if (pos > totalSamples - totalRight)
+            return (float(totalSamples - pos)) / totalRight;
+        else return 1.f;
+    }
+};
+
+struct SinusoidSettings : public Envelope
+{
+    float leftRange{ 0.5f }, rightRange{ 0.5f };
+
+    SinusoidSettings() {}
+
+    SinusoidSettings(float left, float right) :
+        leftRange(left), rightRange(right) {}
+
+    virtual float applyEnvelopeToSample(int totalSamples, int pos)
+    {
+        juce::int64 totalLeft = leftRange * totalSamples;
+        juce::int64 totalRight = rightRange * totalSamples;
+
+        if (pos < totalLeft)
+            return sinusoidFunction(float(pos) / totalLeft);
+        else if (pos > totalSamples - totalRight)
+            return sinusoidFunction((float(totalSamples - pos)) / totalRight);
+        else return 1.f;
+    }
+
+    float sinusoidFunction(float x) {
+        return 1.f - cos((x * M_PI) * 0.5f) + 0.5f;
     }
 };
 

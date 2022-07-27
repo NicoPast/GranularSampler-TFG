@@ -82,7 +82,7 @@ private:
         grainADSRAttackSlider, grainADSRDecaySlider,
         grainADSRSustainSlider,
         grainLinLeftSlider, grainLinRightSlider,
-        grainSINFreqSlider;
+        grainSinLeftSlider, grainSinRightSlider;
 
     SliderAttachment granularSamplerGainSliderAttachment, grainDensitySliderAttachment,
         grainMinLenghtSliderAttachment, grainMaxLenghtSliderAttachment,
@@ -91,7 +91,7 @@ private:
         grainADSRAttackSliderAttachment, grainADSRDecaySliderAttachment,
         grainADSRSustainSliderAttachment,
         grainLinLeftSliderAttachment, grainLinRightSliderAttachment,
-        grainSINFreqSliderAttachment;
+        grainSinLeftSliderAttachment, grainSinRightSliderAttachment;
 
     EnvelopeType envelopeType;
 
@@ -124,6 +124,8 @@ private:
         lowCutSlopeSliderAttachment,
         highCutSlopeSliderAttachment;
 
+    juce::Label eqTitle, lowCutTitle, highCutTitle, bandFilterTitle;
+
     //================================== BypassedButts ===============================
 
     PowerButton eqEnabledButton, lowCutBypassedButton, peakBypassedButton, highCutBypassedButton;
@@ -138,7 +140,7 @@ private:
     //================================== ResponseCurve ===============================
 
     ResponseCurveComponent responseCurveComponent;
-    
+
     //EQEditor eq;
 #pragma endregion EQComponents
 

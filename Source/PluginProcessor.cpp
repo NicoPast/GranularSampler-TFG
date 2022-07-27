@@ -560,10 +560,16 @@ juce::AudioProcessorValueTreeState::ParameterLayout
         75.f));
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(
-        "Grain Sin Freq",
-        "Grain Sin Freq",
-        juce::NormalisableRange<float>(0.1f, 20000.f, .1f, 1.f),
-        100.f));
+        "Grain Sin Left",
+        "Grain Sin Left",
+        juce::NormalisableRange<float>(0.f, 100.f, .1f, 1.f),
+        25.f));
+
+    layout.add(std::make_unique<juce::AudioParameterFloat>(
+        "Grain Sin Right",
+        "Grain Sin Right",
+        juce::NormalisableRange<float>(0.f, 100.f, 1.f, 1.f),
+        75.f));
 
     layout.add(std::make_unique<juce::AudioParameterBool>("Endless", "Endless", false));
 
@@ -591,7 +597,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         "Peak Gain",
         "Peak Gain", 
-        juce::NormalisableRange<float>(-24.0f, 24.0f, 0.5f, 1.0f),
+        juce::NormalisableRange<float>(-24.0f, 24.0f, 0.5f, 1.f),
         0.0f));
 
     // how narrow it is

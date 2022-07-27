@@ -71,12 +71,10 @@ void Grain::resetGrain(juce::AudioBuffer<float> buff,
             settings.adsrSettings.decPerc,
             settings.adsrSettings.sustPerc,
             settings.adsrSettings.relPerc);
-        DBG("ADSR");
         break;
     case EnvelopeType::Lineal:
         envelope = new LinealSettings(settings.linealSettings.leftRange,
             settings.linealSettings.rightRange);
-        DBG("LINEAL");
         break;
     case EnvelopeType::Sinusoid:
         break;
