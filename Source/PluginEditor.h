@@ -11,6 +11,8 @@
 #include <JuceHeader.h>
 #include "PluginProcessor.h"
 #include "CommonEditor.h"
+#include "FileRenderer.h"
+
 #include "Analyzer.h"
 
 #include "EQEditor.h"
@@ -52,6 +54,8 @@ public:
 private:
     TransportState prevoiusPlayerState;
     juce::TextButton openFileButton, playPlayerButton, stopPlayerButton;
+
+    FileRenderer fileRenderer;
 
     std::unique_ptr<juce::FileChooser> chooser;
 

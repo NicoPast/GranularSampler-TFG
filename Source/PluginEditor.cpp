@@ -13,6 +13,7 @@
 GranularSamplerAudioProcessorEditor::GranularSamplerAudioProcessorEditor(GranularSamplerAudioProcessor& p)
     : AudioProcessorEditor(&p), audioProcessor(p),
     responseCurveComponent(audioProcessor),
+    fileRenderer(p),
     granularSamplerGainSlider(*audioProcessor.apvts.getParameter("GranularSampler Gain"), "dB"),
     grainDensitySlider(*audioProcessor.apvts.getParameter("Grain Density"), "%"),
     grainMinLengthSlider(*audioProcessor.apvts.getParameter("Grain Min Length"), "sec"),
@@ -169,6 +170,8 @@ GranularSamplerAudioProcessorEditor::GranularSamplerAudioProcessorEditor(Granula
     stopSamplerButton.setEnabled(false);
     stopSamplerButton.setColour(juce::TextButton::buttonColourId, juce::Colours::red);
 
+    fileRenderer.setLookAndFeel(&lnf);
+
     updateEnvelopeType(static_cast<EnvelopeType>(audioProcessor.apvts.getRawParameterValue("Grain Envelope Type")->load()));
 
     auto safePtr = juce::Component::SafePointer<GranularSamplerAudioProcessorEditor>(this);
@@ -228,27 +231,27 @@ GranularSamplerAudioProcessorEditor::GranularSamplerAudioProcessorEditor(Granula
 
     grainDensityLabel.setText("Grain Density", juce::NotificationType::dontSendNotification);
     grainDensityLabel.setFont(juce::Font(12.0f, juce::Font::FontStyleFlags::plain));
-    grainDensityLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+    grainDensityLabel.setColour(juce::Label::textColourId, juce::Colours::lightgrey);
     grainDensityLabel.setJustificationType(juce::Justification::centred);
 
     gainLabel.setText("Gain", juce::NotificationType::dontSendNotification);
     gainLabel.setFont(juce::Font(12.0f, juce::Font::FontStyleFlags::plain));
-    gainLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+    gainLabel.setColour(juce::Label::textColourId, juce::Colours::lightgrey);
     gainLabel.setJustificationType(juce::Justification::centred);
 
     grainDurationLabel.setText("Grain Duration Range", juce::NotificationType::dontSendNotification);
     grainDurationLabel.setFont(juce::Font(12.0f, juce::Font::FontStyleFlags::plain));
-    grainDurationLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+    grainDurationLabel.setColour(juce::Label::textColourId, juce::Colours::lightgrey);
     grainDurationLabel.setJustificationType(juce::Justification::centred);
 
     sourceRangeLabel.setText("Audio Source Range", juce::NotificationType::dontSendNotification);
     sourceRangeLabel.setFont(juce::Font(12.0f, juce::Font::FontStyleFlags::plain));
-    sourceRangeLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+    sourceRangeLabel.setColour(juce::Label::textColourId, juce::Colours::lightgrey);
     sourceRangeLabel.setJustificationType(juce::Justification::centred);
 
     envelopeLabel.setText("Audio Source Range", juce::NotificationType::dontSendNotification);
     envelopeLabel.setFont(juce::Font(12.0f, juce::Font::FontStyleFlags::plain));
-    envelopeLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+    envelopeLabel.setColour(juce::Label::textColourId, juce::Colours::lightgrey);
     envelopeLabel.setJustificationType(juce::Justification::centred);
 
     creditsLabel.setText("Created by Nicolas Pastore Burgos", juce::NotificationType::dontSendNotification);
@@ -268,6 +271,8 @@ GranularSamplerAudioProcessorEditor::~GranularSamplerAudioProcessorEditor()
     stopPlayerButton.setLookAndFeel(nullptr);
     playSamplerButton.setLookAndFeel(nullptr);
     stopSamplerButton.setLookAndFeel(nullptr);
+
+    fileRenderer.setLookAndFeel(nullptr);
 
     granularSamplerGainSlider.setLookAndFeel(nullptr);
     grainDensitySlider.setLookAndFeel(nullptr);
@@ -320,43 +325,47 @@ void GranularSamplerAudioProcessorEditor::resized()
 
     auto bounds = getLocalBounds();
 
-    auto boundsEQ = bounds.removeFromRight(bounds.getWidth() / 2.f);
+    auto boundsEQ = bounds.removeFromRight(bounds.getWidth() * 0.5f);
 
     eqResized(boundsEQ);
     //eq.resized(boundsEQ);
 
-    auto fileButtonArea = bounds.removeFromTop(bounds.getHeight() / 8.f);
+    auto fileButtonArea = bounds.removeFromTop(bounds.getHeight() * 0.333f);
 
-    auto buttonsArea = fileButtonArea.removeFromRight(fileButtonArea.getWidth() * 2.f / 3.f);
+    auto fileRendererArea = fileButtonArea.removeFromBottom(fileButtonArea.getHeight() * 0.666f);
+
+    fileRenderer.setBounds(fileRendererArea);
+
+    auto buttonsArea = fileButtonArea.removeFromRight(fileButtonArea.getWidth() * 0.666f);
 
     openFileButton.setBounds(fileButtonArea);
 
-    auto playerButtonsArea = buttonsArea.removeFromTop(buttonsArea.getHeight() / 2.f);
+    auto playerButtonsArea = buttonsArea.removeFromTop(buttonsArea.getHeight() * 0.5f);
 
-    auto stopPlayerButtonArea = playerButtonsArea.removeFromRight(playerButtonsArea.getWidth() / 2.f);
+    auto stopPlayerButtonArea = playerButtonsArea.removeFromRight(playerButtonsArea.getWidth() * 0.5f);
 
     playPlayerButton.setBounds(playerButtonsArea);
     stopPlayerButton.setBounds(stopPlayerButtonArea);
 
-    auto stopSamplerButtonArea = buttonsArea.removeFromRight(buttonsArea.getWidth() / 2.f);
+    auto stopSamplerButtonArea = buttonsArea.removeFromRight(buttonsArea.getWidth() * 0.5f);
 
     playSamplerButton.setBounds(buttonsArea);
     stopSamplerButton.setBounds(stopSamplerButtonArea);
 
     //auto infoBar = bounds.removeFromTop(25);
-    auto rightArea = bounds.removeFromRight(bounds.getWidth() / 2.f);
+    auto rightArea = bounds.removeFromRight(bounds.getWidth() * 0.5f);
     
     // left side
-    auto densityBoundsSlider = bounds.removeFromTop(bounds.getHeight() / 2.f);
+    auto densityBoundsSlider = bounds.removeFromTop(bounds.getHeight() * 0.5f);
     grainDensityLabel.setBounds(densityBoundsSlider.removeFromTop(25));
     grainDensitySlider.setBounds(densityBoundsSlider);
 
     // lower-upper
-    auto lengthSliders = bounds.removeFromTop(bounds.getHeight() / 2.f);
+    auto lengthSliders = bounds.removeFromTop(bounds.getHeight() * 0.5f);
     auto titleDurationArea = lengthSliders.removeFromTop(25);
     grainDurationLabel.setBounds(titleDurationArea);
 
-    auto minLengthSlider = lengthSliders.removeFromLeft(lengthSliders.getWidth() / 2.f);
+    auto minLengthSlider = lengthSliders.removeFromLeft(lengthSliders.getWidth() * 0.5f);
     grainMinLengthSlider.setBounds(minLengthSlider);
     grainMaxLengthSlider.setBounds(lengthSliders);
 
@@ -364,25 +373,25 @@ void GranularSamplerAudioProcessorEditor::resized()
     auto titleLengthSliders = bounds.removeFromTop(25);
     sourceRangeLabel.setBounds(titleLengthSliders);
     
-    auto minStartPosSlider = bounds.removeFromLeft(bounds.getWidth() / 2.f);
+    auto minStartPosSlider = bounds.removeFromLeft(bounds.getWidth() * 0.5f);
     grainMinStartPosSlider.setBounds(minStartPosSlider);
     grainMaxStartPosSlider.setBounds(bounds);
 
     // right side
-    auto rightLowArea = rightArea.removeFromBottom(rightArea.getHeight() / 2.f);
+    auto rightLowArea = rightArea.removeFromBottom(rightArea.getHeight() * 0.5f);
     gainLabel.setBounds(rightArea.removeFromTop(25));
     granularSamplerGainSlider.setBounds(rightArea);
 
     // lower
     envelopeLabel.setBounds(rightLowArea.removeFromTop(25));
 
-    auto envelopeSlidersArea = rightLowArea.removeFromRight(rightLowArea.getWidth() / 3.f);
+    auto envelopeSlidersArea = rightLowArea.removeFromRight(rightLowArea.getWidth() * 0.333f);
     creditsLabel.setBounds(rightLowArea.removeFromBottom(25));
     rightLowArea.removeFromTop(25);
     grainEnvelopeTypeSlider.setBounds(rightLowArea);
 
     auto envelopeLinealSlidersArea = envelopeSlidersArea;
-    auto envelopeLinealRightArea = envelopeLinealSlidersArea.removeFromBottom(envelopeLinealSlidersArea.getHeight() / 2.f);
+    auto envelopeLinealRightArea = envelopeLinealSlidersArea.removeFromBottom(envelopeLinealSlidersArea.getHeight() * 0.5f);
 
     grainLinLeftSlider.setBounds(envelopeLinealSlidersArea);
     grainLinRightSlider.setBounds(envelopeLinealRightArea);
@@ -390,8 +399,8 @@ void GranularSamplerAudioProcessorEditor::resized()
     grainSinLeftSlider.setBounds(envelopeLinealSlidersArea);
     grainSinRightSlider.setBounds(envelopeLinealRightArea);
 
-    auto adsrDecayArea = envelopeSlidersArea.removeFromBottom(envelopeSlidersArea.getHeight() * 2.f / 3.f);
-    auto adsrSustainArea = adsrDecayArea.removeFromBottom(adsrDecayArea.getHeight() / 2.f);
+    auto adsrDecayArea = envelopeSlidersArea.removeFromBottom(envelopeSlidersArea.getHeight() * 0.666f);
+    auto adsrSustainArea = adsrDecayArea.removeFromBottom(adsrDecayArea.getHeight() * 0.5f);
     grainADSRAttackSlider.setBounds(envelopeSlidersArea);
     grainADSRDecaySlider.setBounds(adsrDecayArea);
     grainADSRSustainSlider.setBounds(adsrSustainArea);
@@ -572,7 +581,7 @@ void GranularSamplerAudioProcessorEditor::eqResized(juce::Rectangle<int> bounds)
     analyzerEnabledArea.setWidth(bounds.getWidth() * 3.f / 8.f);
     analyzerEnabledArea.setX(bounds.getTopLeft().getX() + 5);
     analyzerEnabledArea.removeFromTop(5);
-    auto eqEnableArea = analyzerEnabledArea.removeFromLeft(analyzerEnabledArea.getWidth() / 5.f);
+    auto eqEnableArea = analyzerEnabledArea.removeFromLeft(analyzerEnabledArea.getWidth() * 0.2f);
     auto titleArea = analyzerEnabledArea;
 
     eqEnabledButton.setBounds(eqEnableArea);
@@ -595,22 +604,22 @@ void GranularSamplerAudioProcessorEditor::eqResized(juce::Rectangle<int> bounds)
     auto highCutArea = bounds.removeFromRight(bounds.getWidth() * 0.5);
 
     auto bypassedArea = lowCutArea.removeFromTop(50);
-    lowCutBypassedButton.setBounds(bypassedArea.removeFromTop(bypassedArea.getHeight() / 2.f));
+    lowCutBypassedButton.setBounds(bypassedArea.removeFromTop(bypassedArea.getHeight() * 0.5f));
     lowCutLabel.setBounds(bypassedArea);
     lowCutFreqSlider.setBounds(lowCutArea.removeFromTop(lowCutArea.getHeight() * 0.5));
     lowCutSlopeSlider.setBounds(lowCutArea);
 
     bypassedArea = highCutArea.removeFromTop(50);
-    highCutBypassedButton.setBounds(bypassedArea.removeFromTop(bypassedArea.getHeight() / 2.f));
+    highCutBypassedButton.setBounds(bypassedArea.removeFromTop(bypassedArea.getHeight() * 0.5f));
     highCutLabel.setBounds(bypassedArea);
     highCutFreqSlider.setBounds(highCutArea.removeFromTop(highCutArea.getHeight() * 0.5));
     highCutSlopeSlider.setBounds(highCutArea);
 
     bypassedArea = bounds.removeFromTop(50);
-    peakBypassedButton.setBounds(bypassedArea.removeFromTop(bypassedArea.getHeight() / 2.f));
+    peakBypassedButton.setBounds(bypassedArea.removeFromTop(bypassedArea.getHeight() * 0.5f));
     bandFilterLabel.setBounds(bypassedArea);
-    peakFreqSlider.setBounds(bounds.removeFromTop(bounds.getHeight() * 0.33));
-    peakGainSlider.setBounds(bounds.removeFromTop(bounds.getHeight() * 0.5));
+    peakFreqSlider.setBounds(bounds.removeFromTop(bounds.getHeight() * 0.33f));
+    peakGainSlider.setBounds(bounds.removeFromTop(bounds.getHeight() * 0.5f));
     peakQualitySlider.setBounds(bounds);
 }
 
@@ -653,7 +662,7 @@ void GranularSamplerAudioProcessorEditor::eqSetUp(juce::Component::SafePointer<G
             state = comp->analyzerEnabledButton.getToggleState();
             comp->responseCurveComponent.toggleAnalysisEnablement(!bypassed && state);
         
-            comp->eqTitleLabel.setColour(juce::Label::textColourId, bypassed ? juce::Colours::darkgrey : juce::Colours::white);
+            comp->eqTitleLabel.setColour(juce::Label::textColourId, bypassed ? juce::Colours::darkgrey : juce::Colours::lightgrey);
         }
     };
 
@@ -702,22 +711,22 @@ void GranularSamplerAudioProcessorEditor::eqSetUp(juce::Component::SafePointer<G
 
     eqTitleLabel.setText("3 Bands Equalizer", juce::NotificationType::dontSendNotification);
     eqTitleLabel.setFont(juce::Font(16.0f, juce::Font::FontStyleFlags::bold));
-    eqTitleLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+    eqTitleLabel.setColour(juce::Label::textColourId, juce::Colours::lightgrey);
     eqTitleLabel.setJustificationType(juce::Justification::centredLeft);
 
     lowCutLabel.setText("LowCut Filter", juce::NotificationType::dontSendNotification);
     lowCutLabel.setFont(juce::Font(12.0f, juce::Font::FontStyleFlags::plain));
-    lowCutLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+    lowCutLabel.setColour(juce::Label::textColourId, juce::Colours::lightgrey);
     lowCutLabel.setJustificationType(juce::Justification::centred);
 
     highCutLabel.setText("HighCut Filter", juce::NotificationType::dontSendNotification);
     highCutLabel.setFont(juce::Font(12.0f, juce::Font::FontStyleFlags::plain));
-    highCutLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+    highCutLabel.setColour(juce::Label::textColourId, juce::Colours::lightgrey);
     highCutLabel.setJustificationType(juce::Justification::centred);
 
     bandFilterLabel.setText("Band Filter", juce::NotificationType::dontSendNotification);
     bandFilterLabel.setFont(juce::Font(12.0f, juce::Font::FontStyleFlags::plain));
-    bandFilterLabel.setColour(juce::Label::textColourId, juce::Colours::white);
+    bandFilterLabel.setColour(juce::Label::textColourId, juce::Colours::lightgrey);
     bandFilterLabel.setJustificationType(juce::Justification::centred);
 }
 
@@ -730,6 +739,8 @@ std::vector<juce::Component*> GranularSamplerAudioProcessorEditor::getComps()
         &stopPlayerButton,
         &playSamplerButton,
         &stopSamplerButton,
+
+        &fileRenderer,
 
         &granularSamplerGainSlider,
         &grainDensitySlider,
