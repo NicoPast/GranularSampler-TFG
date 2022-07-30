@@ -34,6 +34,9 @@
             file="Source/PluginProcessor.h"/>
       <FILE id="vRxiNG" name="PluginEditor.cpp" compile="1" resource="0"
             file="Source/PluginEditor.cpp"/>
+      <FILE id="s0uc1D" name="FileRenderer.cpp" compile="1" resource="0"
+            file="Source/FileRenderer.cpp"/>
+      <FILE id="uqAH9l" name="FileRenderer.h" compile="0" resource="0" file="Source/FileRenderer.h"/>
       <FILE id="GmtgQi" name="PluginEditor.h" compile="0" resource="0" file="Source/PluginEditor.h"/>
     </GROUP>
   </MAINGROUP>
