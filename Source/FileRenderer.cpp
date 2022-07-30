@@ -33,12 +33,8 @@ void FileRenderer::paint (juce::Graphics& g)
        drawing code..
     */
 
-    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));   // clear the background
-
     //g.fillAll(juce::Colours::black);
-
-    g.drawImage(background, getLocalBounds().toFloat());
-
+    // 
     //g.setColour (juce::Colours::grey);
     //g.drawRect (getLocalBounds(), 1);   // draw an outline around the component
 
@@ -46,6 +42,31 @@ void FileRenderer::paint (juce::Graphics& g)
     //g.setFont (14.0f);
     //g.drawText ("FileRenderer", getLocalBounds(),
     //            juce::Justification::centred, true);   // draw some placeholder text
+
+    auto renderFileArea = getFileRendArea();
+    auto left = renderFileArea.getX();
+    auto top = renderFileArea.getY();
+    auto width = renderFileArea.getWidth();
+    auto height = renderFileArea.getHeight();
+
+    g.fillAll (getLookAndFeel().findColour (juce::ResizableWindow::backgroundColourId));   // clear the background
+
+    g.drawImage(background, getLocalBounds().toFloat());
+
+    juce::Path fileRendererPath;
+    
+    fileRendererPath.startNewSubPath(left, top + height * 0.5f);
+
+    for (size_t i = 1; i < width; i++)
+    {
+        fileRendererPath.lineTo(left + i, top + height * juce::Random::getSystemRandom().nextFloat());
+    }
+
+    //g.setColour(juce::Colours::orange);
+    //g.drawRoundedRectangle(getRenderArea().toFloat(), 4.0f, 1.0f);
+
+    g.setColour(juce::Colours::lightgrey);
+    g.strokePath(fileRendererPath, juce::PathStrokeType(2.0f));
 }
 
 void FileRenderer::resized()
@@ -65,31 +86,52 @@ void FileRenderer::resized()
     auto width = renderFileArea.getWidth();
     auto height = renderFileArea.getHeight();
 
+    juce::Array<std::string> labels
+    {
+        "+1.0", "+0.5", "0.0", "-0.5", "-1.0"
+    };
+
+    juce::Array<juce::Colour> colours
+    {
+        juce::Colours::lightgrey,
+        juce::Colours::dimgrey,
+        juce::Colour(0u, 172u, 1u),
+        juce::Colours::dimgrey,
+        juce::Colours::lightgrey
+    };
+
     //g.setColour(juce::Colours::red);
     //g.drawRect(renderArea);
 
+    int labelsWidth = renderArea.getWidth() - width;
+    int labelHeight = renderArea.getHeight() * 0.2f;
+    int upOffset = 5;
+    juce::Rectangle<int> r;
+    r.setSize(labelsWidth - JUCE_LIVE_CONSTANT(-7), labelHeight);
+    r.setX(labelsWidth * 0.2f);
+
+    for (int i = 0; i < 5; i++)
+    {
+        g.setColour(colours[i]);
+        g.drawHorizontalLine(top + height * (i * 0.25f), left, right);
+
+        r.setY(upOffset);
+        //g.setColour(juce::Colours::red);
+        //g.drawRect(r);
+        g.setColour(colours[i]);
+        g.drawFittedText(labels[i], r, juce::Justification::centred, 1);
+        upOffset += labelHeight;
+    }
+
     g.setColour(juce::Colours::orange);
     g.drawVerticalLine(left, renderArea.getY(), renderArea.getBottom());
+}
 
-    g.setColour(juce::Colour(0u, 172u, 1u));
-    g.drawHorizontalLine(top + height * 0.5f, left, right);
+void FileRenderer::updateFile()
+{
+    DBG("click");
 
-    g.setColour(juce::Colours::lightgrey);
-    for (float f = 0.f; f < 1.1f; f += 1.f)
-    {
-        g.drawHorizontalLine(top + height * f, left, right);
-    }
 
-    g.setColour(juce::Colours::dimgrey);
-    for (float f = 0.25f; f < 1.1f; f += 0.5f)
-    {
-        g.drawHorizontalLine(top + height * f, left, right);
-    }
-
-    g.setColour(juce::Colours::lightgrey);
-    juce::Rectangle<int> r;
-    r.setSize(renderArea.getWidth() - width, renderArea.getHeight() * 0.2f);
-    g.drawFittedText("1.0", r, juce::Justification::centred, 1);
 }
 
 juce::Rectangle<int> FileRenderer::getRenderArea()

@@ -445,7 +445,7 @@ void GranularSamplerAudioProcessorEditor::openButtonClicked()
         juce::File{},
         "*.wav");                     // [7]
     auto chooserFlags = juce::FileBrowserComponent::openMode
-        | juce::FileBrowserComponent::canSelectFiles;
+        | juce::FileBrowserComponent::FileChooserFlags::canSelectFiles;
 
     playPlayerButton.setEnabled(false);
     stopPlayerButton.setEnabled(false);
@@ -464,6 +464,8 @@ void GranularSamplerAudioProcessorEditor::openButtonClicked()
                     playSamplerButton.setEnabled(true);
                 }
             }
+
+            fileRenderer.updateFile();
         });
 }
 

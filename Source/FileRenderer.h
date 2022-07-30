@@ -25,6 +25,8 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 
+    void updateFile();
+
 private:
     GranularSamplerAudioProcessor& audioProcessor;
     juce::Image background;
