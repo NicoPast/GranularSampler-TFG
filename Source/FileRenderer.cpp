@@ -148,7 +148,6 @@ void FileRenderer::updateFile(const juce::AudioBuffer<float>& fileBuffer)
     
     int width = renderArea.getWidth() * resolution;
     int size = fileBuffer.getNumSamples();
-    const float* reader = fileBuffer.getReadPointer(0);
     yVals.resize(width);
 
     auto step = 1;
