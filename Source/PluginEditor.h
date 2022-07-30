@@ -116,6 +116,10 @@ private:
 
     void eqSetUp(juce::Component::SafePointer<GranularSamplerAudioProcessorEditor> safePtr);
 
+public:
+    void updateEq();
+
+private:
     RotarySliderWithLabels peakFreqSlider,
         peakGainSlider,
         peakQualitySlider,

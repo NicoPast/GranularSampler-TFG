@@ -140,7 +140,6 @@ void Grain::setLinear(juce::int64 total, float leftRange, float rightRange)
 
 float Grain::applyEnvelopeToSample(int i)
 {
-    // TODO: more than just lineal
     int pos = currentPos + i;
 
     if(envelope)

@@ -78,8 +78,4 @@ private:
     juce::int64 endPos;
     // total of samples
     juce::int64 totalSamples = 0;
-
-    // TODO: ????? lo hago?
-    float paning = 0; // -1.f left, 0 centered, 1.f right
-    float pitch = 0; // altered pitch of the Grain
 };

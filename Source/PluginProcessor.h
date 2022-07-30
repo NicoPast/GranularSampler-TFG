@@ -114,9 +114,6 @@ private:
 
 #pragma endregion SamplerPlayer
 
-    // TODO:
-    // buffer comodo con todo el audio (quizas tenga que rehacer el Sampler) -> DONE
-    // 
     //==============================================================================
 
 #pragma region GranularSampler

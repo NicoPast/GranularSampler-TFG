@@ -261,6 +261,8 @@ GranularSamplerAudioProcessorEditor::GranularSamplerAudioProcessorEditor(Granula
 
     eqSetUp(safePtr);
 
+    updateEq();
+
     setSize (1200, 700);
 }
 
@@ -644,29 +646,7 @@ void GranularSamplerAudioProcessorEditor::eqSetUp(juce::Component::SafePointer<G
     {
         if (auto* comp = safePtr.getComponent())
         {
-            bool bypassed = comp->eqEnabledButton.getToggleState();
-
-            comp->peakBypassedButton.setEnabled(!bypassed);
-            auto state = comp->peakBypassedButton.getToggleState();
-            comp->peakFreqSlider.setEnabled(!bypassed && !state);
-            comp->peakGainSlider.setEnabled(!bypassed && !state);
-            comp->peakQualitySlider.setEnabled(!bypassed && !state);
-
-            comp->lowCutBypassedButton.setEnabled(!bypassed);
-            state = comp->lowCutBypassedButton.getToggleState();
-            comp->lowCutFreqSlider.setEnabled(!bypassed && !state);
-            comp->lowCutSlopeSlider.setEnabled(!bypassed && !state);
-
-            comp->highCutBypassedButton.setEnabled(!bypassed);
-            state = comp->highCutBypassedButton.getToggleState();
-            comp->highCutFreqSlider.setEnabled(!bypassed && !state);
-            comp->highCutSlopeSlider.setEnabled(!bypassed && !state);
-
-            comp->analyzerEnabledButton.setEnabled(!bypassed);
-            state = comp->analyzerEnabledButton.getToggleState();
-            comp->responseCurveComponent.toggleAnalysisEnablement(!bypassed && state);
-        
-            comp->eqTitleLabel.setColour(juce::Label::textColourId, bypassed ? juce::Colours::darkgrey : juce::Colours::lightgrey);
+            comp->updateEq();
         }
     };
 
@@ -732,6 +712,33 @@ void GranularSamplerAudioProcessorEditor::eqSetUp(juce::Component::SafePointer<G
     bandFilterLabel.setFont(juce::Font(12.0f, juce::Font::FontStyleFlags::plain));
     bandFilterLabel.setColour(juce::Label::textColourId, juce::Colours::lightgrey);
     bandFilterLabel.setJustificationType(juce::Justification::centred);
+}
+
+void GranularSamplerAudioProcessorEditor::updateEq()
+{
+    bool bypassed = eqEnabledButton.getToggleState();
+
+    peakBypassedButton.setEnabled(!bypassed);
+    auto state = peakBypassedButton.getToggleState();
+    peakFreqSlider.setEnabled(!bypassed && !state);
+    peakGainSlider.setEnabled(!bypassed && !state);
+    peakQualitySlider.setEnabled(!bypassed && !state);
+
+    lowCutBypassedButton.setEnabled(!bypassed);
+    state = lowCutBypassedButton.getToggleState();
+    lowCutFreqSlider.setEnabled(!bypassed && !state);
+    lowCutSlopeSlider.setEnabled(!bypassed && !state);
+
+    highCutBypassedButton.setEnabled(!bypassed);
+    state = highCutBypassedButton.getToggleState();
+    highCutFreqSlider.setEnabled(!bypassed && !state);
+    highCutSlopeSlider.setEnabled(!bypassed && !state);
+
+    analyzerEnabledButton.setEnabled(!bypassed);
+    state = analyzerEnabledButton.getToggleState();
+    responseCurveComponent.toggleAnalysisEnablement(!bypassed && state);
+
+    eqTitleLabel.setColour(juce::Label::textColourId, bypassed ? juce::Colours::darkgrey : juce::Colours::lightgrey);
 }
 
 std::vector<juce::Component*> GranularSamplerAudioProcessorEditor::getComps() 
