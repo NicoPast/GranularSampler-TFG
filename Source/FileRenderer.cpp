@@ -45,7 +45,7 @@ void FileRenderer::paint (juce::Graphics& g)
 
     auto renderFileArea = getFileRendArea();
     auto left = renderFileArea.getX();
-    auto top = renderFileArea.getY();
+    auto bottom = renderFileArea.getBottom();
     auto width = renderFileArea.getWidth();
     auto height = renderFileArea.getHeight();
 
@@ -55,11 +55,25 @@ void FileRenderer::paint (juce::Graphics& g)
 
     juce::Path fileRendererPath;
     
-    fileRendererPath.startNewSubPath(left, top + height * 0.5f);
+    fileRendererPath.startNewSubPath(left, bottom - height * 0.5f);
 
-    for (size_t i = 1; i < width; i++)
+    if (yVals.size() > 0)
     {
-        fileRendererPath.lineTo(left + i, top + height * juce::Random::getSystemRandom().nextFloat());
+        DBG("===========");
+        DBG(juce::findMaximum<float>(&yVals[0], yVals.size()));
+        DBG(juce::findMinimum<float>(&yVals[0], yVals.size()));
+    }
+
+    int pos = 0;
+    for (size_t i = 0; i < yVals.size(); )
+    {
+        //fileRendererPath.lineTo(left + i, bottom - height * juce::Random::getSystemRandom().nextFloat());
+        for (size_t j = 0; j < resolution; ++j)
+        {
+            //int y = bottom - height * 0.5f + height * yVals[i++];
+            fileRendererPath.lineTo(left + pos, bottom - height * 0.5f + yVals[i++] * (height * 1.f));
+        }
+        pos++;
     }
 
     //g.setColour(juce::Colours::orange);
@@ -107,7 +121,7 @@ void FileRenderer::resized()
     int labelHeight = renderArea.getHeight() * 0.2f;
     int upOffset = 5;
     juce::Rectangle<int> r;
-    r.setSize(labelsWidth - JUCE_LIVE_CONSTANT(-7), labelHeight);
+    r.setSize(labelsWidth + 7, labelHeight);
     r.setX(labelsWidth * 0.2f);
 
     for (int i = 0; i < 5; i++)
@@ -127,11 +141,40 @@ void FileRenderer::resized()
     g.drawVerticalLine(left, renderArea.getY(), renderArea.getBottom());
 }
 
-void FileRenderer::updateFile()
+void FileRenderer::updateFile(const juce::AudioBuffer<float>& fileBuffer)
 {
-    DBG("click");
+    DBG("Updating file renderer");
+    auto renderArea = getFileRendArea();
+    
+    int width = renderArea.getWidth() * resolution;
+    int size = fileBuffer.getNumSamples();
+    const float* reader = fileBuffer.getReadPointer(0);
+    yVals.resize(width);
 
+    auto step = 1;
+    if (size > width)
+        step = size / width;
+        
+    for (int i = 0; i < width; ++i)
+    {
+        //auto t = (*(reader + (i * step)));
+        //auto t2 = fileBuffer.getSample(0, i * step);
+        //yVals[i] = t2;
+        // turns into mono
+        for (int ch = 0; ch < fileBuffer.getNumChannels(); ++ch)
+        {
+            yVals[i] = fileBuffer.getSample(ch, i * step) / fileBuffer.getNumChannels();
+        }
+    }
+    //for (size_t i = 0; i < yVals.size(); ++i)
+    //{
+    //    juce::jmap<float>(yVals[i], -1.f, 1.f, renderArea.getY(), renderArea.getBottom());
+    //}
+    DBG("===========");
+    DBG(juce::findMaximum<float>(&yVals[0], width));
+    DBG(juce::findMinimum<float>(&yVals[0], width));
 
+    repaint();
 }
 
 juce::Rectangle<int> FileRenderer::getRenderArea()

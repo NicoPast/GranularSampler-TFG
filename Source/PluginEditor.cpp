@@ -249,7 +249,7 @@ GranularSamplerAudioProcessorEditor::GranularSamplerAudioProcessorEditor(Granula
     sourceRangeLabel.setColour(juce::Label::textColourId, juce::Colours::lightgrey);
     sourceRangeLabel.setJustificationType(juce::Justification::centred);
 
-    envelopeLabel.setText("Audio Source Range", juce::NotificationType::dontSendNotification);
+    envelopeLabel.setText("Grain Envelope", juce::NotificationType::dontSendNotification);
     envelopeLabel.setFont(juce::Font(12.0f, juce::Font::FontStyleFlags::plain));
     envelopeLabel.setColour(juce::Label::textColourId, juce::Colours::lightgrey);
     envelopeLabel.setJustificationType(juce::Justification::centred);
@@ -261,7 +261,7 @@ GranularSamplerAudioProcessorEditor::GranularSamplerAudioProcessorEditor(Granula
 
     eqSetUp(safePtr);
 
-    setSize (1200, 600);
+    setSize (1200, 700);
 }
 
 GranularSamplerAudioProcessorEditor::~GranularSamplerAudioProcessorEditor()
@@ -332,7 +332,7 @@ void GranularSamplerAudioProcessorEditor::resized()
 
     auto fileButtonArea = bounds.removeFromTop(bounds.getHeight() * 0.333f);
 
-    auto fileRendererArea = fileButtonArea.removeFromBottom(fileButtonArea.getHeight() * 0.666f);
+    auto fileRendererArea = fileButtonArea.removeFromBottom(fileButtonArea.getHeight() * 0.75f);
 
     fileRenderer.setBounds(fileRendererArea);
 
@@ -447,11 +447,6 @@ void GranularSamplerAudioProcessorEditor::openButtonClicked()
     auto chooserFlags = juce::FileBrowserComponent::openMode
         | juce::FileBrowserComponent::FileChooserFlags::canSelectFiles;
 
-    playPlayerButton.setEnabled(false);
-    stopPlayerButton.setEnabled(false);
-    playSamplerButton.setEnabled(false);
-    stopSamplerButton.setEnabled(false);
-
     chooser->launchAsync(chooserFlags, [this](const juce::FileChooser& fc)           // [8]
         {
             auto file = fc.getResult();
@@ -462,10 +457,17 @@ void GranularSamplerAudioProcessorEditor::openButtonClicked()
                 {
                     playPlayerButton.setEnabled(true);                                                      // [13]
                     playSamplerButton.setEnabled(true);
+                    fileRenderer.updateFile(audioProcessor.getFileBuffer());
                 }
+                else
+                {
+                    playPlayerButton.setEnabled(false);
+                    playSamplerButton.setEnabled(false);
+                }
+                stopPlayerButton.setEnabled(false);
+                stopSamplerButton.setEnabled(false);
             }
 
-            fileRenderer.updateFile();
         });
 }
 

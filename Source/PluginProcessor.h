@@ -99,6 +99,8 @@ public:
     void updatePlayerState(const TransportState newState);
 
     TransportState getPlayerTransportState();
+
+    juce::AudioBuffer<float>& getFileBuffer();
 private:
     //TransportState transpState;
     juce::AudioFormatManager formatManager;

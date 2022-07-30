@@ -399,6 +399,11 @@ TransportState GranularSamplerAudioProcessor::getPlayerTransportState()
     return buffPlay.getState();
 }
 
+juce::AudioBuffer<float>& GranularSamplerAudioProcessor::getFileBuffer()
+{
+    return buffPlay.getBuffer();
+}
+
 void GranularSamplerAudioProcessor::changeListenerCallback(juce::ChangeBroadcaster* source)
 {
     // ZOMBIE

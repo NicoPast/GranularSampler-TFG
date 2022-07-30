@@ -25,11 +25,15 @@ public:
     void paint (juce::Graphics&) override;
     void resized() override;
 
-    void updateFile();
+    void updateFile(const juce::AudioBuffer<float>& fileBuffer);
 
 private:
     GranularSamplerAudioProcessor& audioProcessor;
     juce::Image background;
+
+    std::vector<float> yVals;
+
+    size_t resolution = 10;
 
     juce::Rectangle<int> getRenderArea();
 
