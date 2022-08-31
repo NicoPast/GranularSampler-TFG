@@ -161,12 +161,12 @@ GranularSamplerAudioProcessorEditor::GranularSamplerAudioProcessorEditor(Granula
     stopPlayerButton.setColour(juce::TextButton::buttonColourId, juce::Colours::red);
 
     playSamplerButton.setLookAndFeel(&lnf);
-    playSamplerButton.setButtonText("Click to Play Sampler");
+    playSamplerButton.setButtonText("Click to Play Granular");
     playSamplerButton.setEnabled(false);
     playSamplerButton.setColour(juce::TextButton::buttonColourId, juce::Colours::green);
 
     stopSamplerButton.setLookAndFeel(&lnf);
-    stopSamplerButton.setButtonText("Click to Stop Sampler");
+    stopSamplerButton.setButtonText("Click to Stop Granular");
     stopSamplerButton.setEnabled(false);
     stopSamplerButton.setColour(juce::TextButton::buttonColourId, juce::Colours::red);
 

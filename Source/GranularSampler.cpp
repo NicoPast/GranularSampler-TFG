@@ -96,6 +96,10 @@ void GranularSampler::getNextAudioBlock(juce::AudioBuffer<float>& buffer)
 
         int played = playingGrain.size();
 
+        //mix = (1 / sqrt(N)) * (a1 + ... + aN)
+
+        float gain = 1.f / std::sqrt(played);
+
         //DBG(played);
 
         std::list<Grain*>::iterator it = playingGrain.begin();
@@ -113,7 +117,7 @@ void GranularSampler::getNextAudioBlock(juce::AudioBuffer<float>& buffer)
 
                 buffer.addFrom(ch, startingPos,
                     (*it)->getNextBufferBlock(fileBuff->getBuffer(), buffer),
-                    ch, startingPos, samples - startingPos, 1.f / played);
+                    ch, startingPos, samples - startingPos, gain);
             }
 
             if ((*it)->advanceGrainStartPos(samples))

@@ -490,7 +490,7 @@ juce::AudioProcessorValueTreeState::ParameterLayout
     layout.add(std::make_unique<juce::AudioParameterFloat>(
         "GranularSampler Gain",
         "GranularSampler Gain",
-        juce::NormalisableRange<float>(0, 50.f, .1f, 1.f),
+        juce::NormalisableRange<float>(0, 10.f, .01f, 1.f),
         1.f));
 
     layout.add(std::make_unique<juce::AudioParameterFloat>(
