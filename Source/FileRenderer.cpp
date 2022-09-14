@@ -169,9 +169,9 @@ void FileRenderer::updateFile(const juce::AudioBuffer<float>& fileBuffer)
     //{
     //    juce::jmap<float>(yVals[i], -1.f, 1.f, renderArea.getY(), renderArea.getBottom());
     //}
-    DBG("===========");
-    DBG(juce::findMaximum<float>(&yVals[0], width));
-    DBG(juce::findMinimum<float>(&yVals[0], width));
+    //DBG("===========");
+    //DBG(juce::findMaximum<float>(&yVals[0], width));
+    //DBG(juce::findMinimum<float>(&yVals[0], width));
 
     repaint();
 }

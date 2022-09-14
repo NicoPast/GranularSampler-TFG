@@ -129,14 +129,9 @@ private:
     // Density of Grain
     // Number of Grains
     // Duration of reproduction
+    // Grain Lenght
 
-    // tipo de envolvente (de base solo OSC, pero puedo añadir ADR tambien y existe Gaussinana)
-
-    // posibilidad de que tenga variacion aleatoria?:
-    //      duration
-    //      pan
-    //      pitch
-    //      
+    // tipo de envolvente (lineal, ADSR, lineal)
 
 #pragma endregion GranularSampler
 

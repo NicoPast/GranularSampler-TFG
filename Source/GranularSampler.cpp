@@ -60,7 +60,6 @@ void GranularSampler::getNextAudioBlock(juce::AudioBuffer<float>& buffer)
     //dame nuevos granos en funcion de la densidad
     if (fileBuff != nullptr)
     {
-        // TODO: que la densidad funcione con floats en vez de con enteros
         while (playingGrain.size() < settings.grainDensity && !grainPool.empty())
         {
             float gMaxLeng = settings.grainMaxLength;
@@ -131,45 +130,6 @@ void GranularSampler::getNextAudioBlock(juce::AudioBuffer<float>& buffer)
 
             //played++;
         }
-
-        // TODO: normalizado funciona asi asa
-        // funciona asi porque esta leyendo el inmediato solo, y deberia en vez de normalizarlo
-        // bajar la ganancia a todos los buffers en vez de normalizar
-        //normalizamos el resultado
-        //juce::Range<float> minMax = buffer.findMinMax(0, 0, buffer.getNumSamples());
-        ////solo hazlo si el canal lo necesita
-        //if (minMax.getStart() < -1.f || minMax.getEnd() > 1.f)
-        //{
-        //    juce::Range<float> fileMinMax = fileBuff->getMinMaxValuesLeftChannel();
-        //    for (int i = 0; i < numSamples; i++) {
-        //        float scaled = scaleBetween(buffer.getSample(0, i),
-        //            fileMinMax.getStart(), fileMinMax.getEnd(),
-        //            minMax.getStart(), minMax.getEnd());
-        //        buffer.setSample(0, i, scaled);
-        //    }
-        //    //buffer.applyGain(0, 0, buffer.getNumSamples(), 1.f / played);
-        //}
-        //minMax = buffer.findMinMax(1, 0, buffer.getNumSamples());
-        //if (minMax.getStart() < -1.f || minMax.getEnd() > 1.f)
-        //{
-        //    juce::Range<float> fileMinMax = fileBuff->getMinMaxValuesRightChannel();
-        //    for (int i = 0; i < numSamples; i++) {
-        //        float scaled = scaleBetween(buffer.getSample(1, i),
-        //            fileMinMax.getStart(), fileMinMax.getEnd(),
-        //            minMax.getStart(), minMax.getEnd());
-        //        buffer.setSample(1, i, scaled);
-        //    }
-        //}
-
-        // TODO: be more clever than this
-        // quizas debería implementar un compresor?
-        float strength = 1.f;
-
-        //buffer.applyGain(strength * 1.f / played);
-
-        //DBG(played);
-
-        //DBG(buffer.findMinMax(0, 0, buffer.getNumSamples()).getEnd());
 
         samplerPos += numSamples;
     }

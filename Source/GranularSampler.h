@@ -21,17 +21,6 @@ class GranularSamplerAudioProcessor;
 
 class GranularSampler
 {
-    // idea para la densidad
-    // se tira un d100, si la densidad es mayor a 100, seguro se coge uno
-    // se le resta 100 a la densidad
-    // mientras no falle, sigue calculando un nuevo grano
-    // los granos persistentes, restan 100 por cada
-
-    // idea 2 para la densidad
-    // si es 100 recorres todo el bloque y te aseguras que suena siempre
-    // restas 100, si es mas de 100 repites
-    // si es menos de 100, lo utilizo como un minimo de porcentaje que debo ocupar
-
 public:
     GranularSampler(GranularSamplerAudioProcessor* audioProc);
     ~GranularSampler();
@@ -63,9 +52,6 @@ private:
     juce::int64 samplerPos = 0;
     juce::int64 totalNumSamples;
 
-    //float grainDensity;
-    //float grainDuration;
-
     float attackPerc;
     float decayPerc;
     float sustPerc;
@@ -74,8 +60,6 @@ private:
     float startingPositionRandomMin;
     float startingPositionRandomMax;
     float densityRandom;
-    float panRandom;
-    float pitchRandom;
 
     // unaltered grains which will still be playing
     std::list<Grain*> playingGrain;

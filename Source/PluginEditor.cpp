@@ -633,9 +633,6 @@ void GranularSamplerAudioProcessorEditor::eqSetUp(juce::Component::SafePointer<G
 {
     //auto test = eq.getButtons();
 
-    //eq.init(lnf);
-
-    // TODO: wat, why you little... me peta si lo hago desde otra clase
     eqEnabledButton.setLookAndFeel(&lnf);
     peakBypassedButton.setLookAndFeel(&lnf);
     lowCutBypassedButton.setLookAndFeel(&lnf);

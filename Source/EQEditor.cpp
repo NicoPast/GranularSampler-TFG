@@ -103,7 +103,6 @@ EQEditor::~EQEditor()
 
 void EQEditor::init(LookAndFeel& lnf)
 {
-    // TODO: te odio
     //peakBypassedButton.setLookAndFeel(&lnf);
     //lowCutBypassedButton.setLookAndFeel(&lnf);
     //highCutBypassedButton.setLookAndFeel(&lnf);

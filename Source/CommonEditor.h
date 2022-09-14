@@ -52,7 +52,6 @@ private:
     juce::String suffix;
 };
 
-// TODO: mejorar los limites temporales con esto
 struct TwoValueHorizontalSlider : juce::Slider
 {
     TwoValueHorizontalSlider(juce::RangedAudioParameter& rap, const juce::String& unitSuffix) :
